@@ -14,45 +14,50 @@
         #gameContainer { position: relative; width: 100%; height: 100%; }
         #gameCanvas { display: block; width: 100%; height: 100%; }
         #score {
-            position: absolute; top: 10px; left: 10px; font-size: clamp(16px, 4vw, 24px);
+            position: absolute; top: 10px; left: 10px; font-size: 20px;
             font-weight: bold; color: #333; background: rgba(255,255,255,0.9);
             padding: 8px 15px; border-radius: 10px; z-index: 10;
         }
-        #gameOver {
+        #startScreen, #gameOver {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95); padding: 20px 30px; border-radius: 15px;
-            text-align: center; display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 20;
+            background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px;
+            text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 20;
         }
-        #gameOver h2 { margin: 0 0 15px 0; color: #333; font-size: clamp(18px, 5vw, 24px); }
-        #gameOver p { margin: 10px 0; font-size: clamp(14px, 4vw, 18px); }
-        #restartBtn {
-            margin-top: 15px; padding: 12px 30px; font-size: clamp(14px, 4vw, 18px);
-            background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;
+        #gameOver { display: none; }
+        h2 { margin: 0 0 15px 0; color: #333; }
+        p { margin: 10px 0; color: #666; }
+        button {
+            margin-top: 15px; padding: 15px 40px; font-size: 18px;
+            background: #4CAF50; color: white; border: none;
+            border-radius: 5px; cursor: pointer;
         }
-        #restartBtn:active { background: #45a049; transform: scale(0.95); }
-        #instructions {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 10px;
-            font-size: clamp(12px, 3.5vw, 16px); text-align: center; z-index: 10;
-        }
+        button:active { background: #45a049; transform: scale(0.95); }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         <div id="score">Счёт: 0</div>
-        <div id="instructions">Нажмите ПРОБЕЛ или коснитесь экрана для прыжка</div>
+        
+        <div id="startScreen">
+            <h2>🐱 Котик бежит!</h2>
+            <p>Перепрыгивай через камни</p>
+            <p style="font-size: 14px;">Пробел или клик для прыжка</p>
+            <button id="startBtn">▶️ Начать игру</button>
+        </div>
+        
         <div id="gameOver">
-            <h2>Игра окончена!</h2>
+            <h2>💀 Игра окончена!</h2>
             <p>Ваш счёт: <span id="finalScore">0</span></p>
-            <button id="restartBtn">Играть снова</button>
+            <button id="restartBtn">🔄 Играть снова</button>
         </div>
     </div>
 
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Инициализация Telegram
+        try {
             const tg = window.Telegram?.WebApp;
             if (tg) {
                 tg.expand();
@@ -61,41 +66,54 @@
                 tg.BackButton.onClick(() => {
                     window.location.href = 'https://juvenalshaeffer-art.github.io/tamagotchi/';
                 });
+                console.log('✅ Telegram WebApp подключён');
             }
-        });
+        } catch(e) {
+            console.log('⚠️ Telegram WebApp не доступен (это нормально в браузере)');
+        }
     </script>
 
     <script>
+        console.log('🎮 Игра загружается...');
+        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
         const gameOverScreen = document.getElementById('gameOver');
         const finalScoreElement = document.getElementById('finalScore');
         const restartBtn = document.getElementById('restartBtn');
-        const instructions = document.getElementById('instructions');
 
+        // Размер canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ground.y = canvas.height - 60;
-            cat.groundY = canvas.height - 100;
-            if (!cat.isJumping) cat.y = cat.groundY;
+            console.log('📐 Размер canvas:', canvas.width, 'x', canvas.height);
         }
-        window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
-        const game = { speed: 5, score: 0, isRunning: false, frame: 0, gravity: 0.8 };
-        
+        // Параметры игры
+        let gameRunning = false;
+        let score = 0;
+        let speed = 5;
+        let frame = 0;
+
+        // Котик
         const cat = {
             x: 80, y: 0, width: 70, height: 70,
-            velocityY: 0, isJumping: false, groundY: 0,
-            legFrame: 0
+            velocityY: 0, jumping: false, groundY: 0
         };
 
+        // Препятствия
         let obstacles = [];
-        const ground = { y: 0, height: 60 };
+        let obstacleTimer = 0;
 
-        // Рисуем котика программно
+        // Земля
+        const groundHeight = 60;
+
+        // Рисуем котика (без картинок!)
         function drawCat() {
             ctx.save();
             ctx.translate(cat.x, cat.y);
@@ -112,12 +130,12 @@
             ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(10, 35);
-            const tailWag = Math.sin(game.frame * 0.2) * 5;
+            const tailWag = Math.sin(frame * 0.2) * 5;
             ctx.quadraticCurveTo(-5, 25 + tailWag, -10, 15 + tailWag);
             ctx.stroke();
 
-            // Анимация лап
-            const legOffset = cat.isJumping ? 0 : Math.sin(game.frame * 0.3) * 8;
+            // Лапы (анимация)
+            const legOffset = cat.jumping ? 0 : Math.sin(frame * 0.3) * 8;
 
             // Задние лапы
             ctx.fillStyle = '#909090';
@@ -220,39 +238,33 @@
         }
 
         function jump() {
-            if (!cat.isJumping && game.isRunning) {
+            if (!cat.jumping && gameRunning) {
                 cat.velocityY = -15;
-                cat.isJumping = true;
+                cat.jumping = true;
+                console.log('🦘 Прыжок!');
             }
         }
 
         function updateCat() {
-            cat.velocityY += game.gravity;
+            cat.velocityY += 0.8;
             cat.y += cat.velocityY;
 
             if (cat.y >= cat.groundY) {
                 cat.y = cat.groundY;
-                cat.isJumping = false;
+                cat.jumping = false;
                 cat.velocityY = 0;
             }
         }
 
         class Obstacle {
             constructor() {
-                this.width = 30 + Math.random() * 20;
+                this.width = 30 + Math.random() * 25;
                 this.height = 30 + Math.random() * 30;
                 this.x = canvas.width;
-                this.y = ground.y - this.height;
-                this.markedForDeletion = false;
+                this.y = canvas.height - groundHeight - this.height;
             }
             update() {
-                this.x -= game.speed;
-                if (this.x + this.width < 0) {
-                    this.markedForDeletion = true;
-                    game.score++;
-                    scoreElement.textContent = `Счёт: ${game.score}`;
-                    if (game.score % 5 === 0) game.speed += 0.5;
-                }
+                this.x -= speed;
             }
             draw() {
                 ctx.fillStyle = '#696969';
@@ -260,100 +272,112 @@
                 ctx.ellipse(this.x + this.width/2, this.y + this.height/2, 
                     this.width/2, this.height/2, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.fillStyle = '#505050';
-                ctx.beginPath();
-                ctx.ellipse(this.x + this.width/2, this.y + this.height - 5, 
-                    this.width/2 - 5, 8, 0, 0, Math.PI * 2);
-                ctx.fill();
             }
         }
 
-        let obstacleTimer = 0;
         function handleObstacles() {
             obstacleTimer++;
-            if (obstacleTimer > 100) {
+            if (obstacleTimer > 90 + Math.random() * 60) {
                 obstacles.push(new Obstacle());
                 obstacleTimer = 0;
             }
-            obstacles.forEach(o => { o.update(); o.draw(); });
-            obstacles = obstacles.filter(o => !o.markedForDeletion);
-        }
 
-        function checkCollisions() {
-            for (let o of obstacles) {
-                if (cat.x + 15 < o.x + o.width && cat.x + cat.width - 15 > o.x &&
-                    cat.y + 15 < o.y + o.height && cat.y + cat.height - 15 > o.y) {
+            obstacles.forEach((obs, index) => {
+                obs.update();
+                obs.draw();
+
+                // Столкновение
+                if (cat.x < obs.x + obs.width && cat.x + cat.width > obs.x &&
+                    cat.y < obs.y + obs.height && cat.y + cat.height > obs.y) {
                     gameOver();
                 }
-            }
+
+                // Удаление и счёт
+                if (obs.x + obs.width < 0) {
+                    obstacles.splice(index, 1);
+                    score++;
+                    scoreElement.textContent = 'Счёт: ' + score;
+                    if (score % 5 === 0) speed += 0.5;
+                }
+            });
         }
 
         function drawGround() {
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(0, ground.y, canvas.width, ground.height);
+            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
             ctx.fillStyle = '#228B22';
-            ctx.fillRect(0, ground.y, canvas.width, 10);
+            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 10);
         }
 
         function gameOver() {
-            game.isRunning = false;
-            finalScoreElement.textContent = game.score;
+            gameRunning = false;
+            finalScoreElement.textContent = score;
             gameOverScreen.style.display = 'block';
+            console.log('💀 Игра окончена! Счёт:', score);
         }
 
-        function restart() {
-            game.speed = 5; game.score = 0; game.isRunning = true; game.frame = 0;
-            cat.y = cat.groundY; cat.velocityY = 0; cat.isJumping = false;
-            obstacles = []; obstacleTimer = 0;
+        function startGame() {
+            console.log('🚀 Игра началась!');
+            score = 0;
+            speed = 5;
+            frame = 0;
+            obstacles = [];
+            obstacleTimer = 0;
+            cat.y = cat.groundY;
+            cat.velocityY = 0;
+            cat.jumping = false;
             scoreElement.textContent = 'Счёт: 0';
             gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'none';
+            gameRunning = true;
             animate();
         }
 
         function animate() {
-            if (!game.isRunning) return;
+            if (!gameRunning) return;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            cat.groundY = canvas.height - groundHeight - cat.height;
+            
             drawGround();
             updateCat();
             drawCat();
             handleObstacles();
-            checkCollisions();
-            game.frame++;
+
+            frame++;
             requestAnimationFrame(animate);
         }
 
+        // Кнопки
+        startBtn.addEventListener('click', () => {
+            console.log('👆 Нажата кнопка Старт');
+            startGame();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            console.log('👆 Нажата кнопка Рестарт');
+            startGame();
+        });
+
+        // Управление
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (!game.isRunning && gameOverScreen.style.display === 'none') {
-                    game.isRunning = true; instructions.style.display = 'none'; animate();
-                } else if (game.isRunning) { jump(); }
+                if (gameRunning) jump();
             }
         });
 
         canvas.addEventListener('click', () => {
-            if (!game.isRunning && gameOverScreen.style.display === 'none') {
-                game.isRunning = true; instructions.style.display = 'none'; animate();
-            } else if (game.isRunning) { jump(); }
+            if (gameRunning) jump();
         });
 
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            if (!game.isRunning && gameOverScreen.style.display === 'none') {
-                game.isRunning = true; instructions.style.display = 'none'; animate();
-            } else if (game.isRunning) { jump(); }
+            if (gameRunning) jump();
         }, { passive: false });
 
-        restartBtn.addEventListener('click', restart);
-
-        // Автозапуск через 2 секунды
-        setTimeout(() => {
-            if (!game.isRunning && gameOverScreen.style.display === 'none') {
-                game.isRunning = true;
-                instructions.style.display = 'none';
-                animate();
-            }
-        }, 2000);
+        console.log('✅ Игра готова к запуску! Нажмите "Начать игру"');
     </script>
 </body>
 </html>
