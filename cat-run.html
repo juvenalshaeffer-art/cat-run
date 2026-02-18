@@ -55,6 +55,22 @@
         </div>
     </div>
 
+    <!-- Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.expand();
+                tg.ready();
+                tg.BackButton.show();
+                tg.BackButton.onClick(() => {
+                    window.location.href = 'https://juvenalshaeffer-art.github.io/tamagotchi/';
+                });
+            }
+        });
+    </script>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -78,12 +94,12 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Загружаем ТОЛЬКО нужные кадры: 1-6 (бег) и 13-15 (прыжок)
+        // Загружаем кадры: 1-6 (бег) и 13-15 (прыжок)
         const frames = [];
-        const runFrames = [1, 2, 3, 4, 5, 6];      // 6 кадров бега
-        const jumpFrames = [13, 14, 15];             // 3 кадра прыжка
-        const allFrameNumbers = [...runFrames, ...jumpFrames]; // [1,2,3,4,5,6,13,14,15]
-        const totalFrames = allFrameNumbers.length; // 9 кадров
+        const runFrames = [1, 2, 3, 4, 5, 6];
+        const jumpFrames = [13, 14, 15];
+        const allFrameNumbers = [...runFrames, ...jumpFrames];
+        const totalFrames = allFrameNumbers.length;
         let loadedFrames = 0;
         let allFramesLoaded = false;
 
@@ -97,9 +113,7 @@
                     if (loadedFrames === totalFrames) {
                         allFramesLoaded = true;
                         loadingScreen.style.display = 'none';
-                        setTimeout(() => {
-                            instructions.style.display = 'none';
-                        }, 2000);
+                        setTimeout(() => { instructions.style.display = 'none'; }, 2000);
                         setTimeout(() => {
                             if (!game.isRunning && gameOverScreen.style.display === 'none') {
                                 game.isRunning = true;
@@ -110,32 +124,19 @@
                 };
                 img.onerror = () => {
                     console.error(`Не удалось загрузить cat-run-${num}.png`);
-                    loadingProgress.textContent = `Ошибка: cat-run-${num}.png`;
                 };
                 frames.push(img);
             });
         }
 
-        const game = {
-            speed: 5, score: 0, isRunning: false, frame: 0, gravity: 0.8
-        };
-
+        const game = { speed: 5, score: 0, isRunning: false, frame: 0, gravity: 0.8 };
         const cat = {
             x: 80, y: 0, width: 80, height: 80, velocityY: 0,
             isJumping: false, groundY: 0, currentFrame: 0,
             frameCounter: 0, animationSpeed: 5
         };
 
-        // Индексы кадров в массиве frames:
-        // 0-5: кадры бега (cat-run-1...6)
-        // 6-8: кадры прыжка (cat-run-13...15)
-        const animationConfig = {
-            runStart: 0,
-            runEnd: 5,
-            jumpStart: 6,
-            jumpEnd: 8
-        };
-
+        const animationConfig = { runStart: 0, runEnd: 5, jumpStart: 6, jumpEnd: 8 };
         let obstacles = [];
         const ground = { y: 0, height: 60 };
 
@@ -162,11 +163,6 @@
                 ctx.ellipse(this.x + this.width/2, this.y + this.height/2, 
                     this.width/2, this.height/2, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.fillStyle = '#505050';
-                ctx.beginPath();
-                ctx.ellipse(this.x + this.width/2, this.y + this.height - 5, 
-                    this.width/2 - 5, 8, 0, 0, Math.PI * 2);
-                ctx.fill();
             }
         }
 
@@ -181,27 +177,20 @@
         function updateCat() {
             cat.velocityY += game.gravity;
             cat.y += cat.velocityY;
-
             if (cat.y >= cat.groundY) {
                 cat.y = cat.groundY;
                 cat.isJumping = false;
                 cat.velocityY = 0;
             }
-
             cat.frameCounter++;
             if (cat.frameCounter >= cat.animationSpeed) {
                 cat.frameCounter = 0;
-                
                 if (cat.isJumping) {
                     cat.currentFrame++;
-                    if (cat.currentFrame > animationConfig.jumpEnd) {
-                        cat.currentFrame = animationConfig.jumpEnd; // Остаёмся на последнем кадре прыжка
-                    }
+                    if (cat.currentFrame > animationConfig.jumpEnd) cat.currentFrame = animationConfig.jumpEnd;
                 } else {
                     cat.currentFrame++;
-                    if (cat.currentFrame > animationConfig.runEnd) {
-                        cat.currentFrame = animationConfig.runStart;
-                    }
+                    if (cat.currentFrame > animationConfig.runEnd) cat.currentFrame = animationConfig.runStart;
                 }
             }
         }
@@ -216,26 +205,20 @@
         }
 
         let obstacleTimer = 0;
-        let obstacleInterval = 100;
-
         function handleObstacles() {
             obstacleTimer++;
-            if (obstacleTimer > obstacleInterval) {
+            if (obstacleTimer > 100) {
                 obstacles.push(new Obstacle());
                 obstacleTimer = 0;
-                obstacleInterval = 60 + Math.random() * 60;
             }
-            obstacles.forEach(obstacle => { obstacle.update(); obstacle.draw(); });
-            obstacles = obstacles.filter(obs => !obs.markedForDeletion);
+            obstacles.forEach(o => { o.update(); o.draw(); });
+            obstacles = obstacles.filter(o => !o.markedForDeletion);
         }
 
         function checkCollisions() {
-            const hitboxPadding = 15;
-            for (let obstacle of obstacles) {
-                if (cat.x + hitboxPadding < obstacle.x + obstacle.width &&
-                    cat.x + cat.width - hitboxPadding > obstacle.x &&
-                    cat.y + hitboxPadding < obstacle.y + obstacle.height &&
-                    cat.y + cat.height - hitboxPadding > obstacle.y) {
+            for (let o of obstacles) {
+                if (cat.x + 10 < o.x + o.width && cat.x + cat.width - 10 > o.x &&
+                    cat.y + 10 < o.y + o.height && cat.y + cat.height - 10 > o.y) {
                     gameOver();
                 }
             }
@@ -255,7 +238,7 @@
         }
 
         function restart() {
-            game.speed = 5; game.score = 0; game.isRunning = true; game.frame = 0;
+            game.speed = 5; game.score = 0; game.isRunning = true;
             cat.y = cat.groundY; cat.velocityY = 0; cat.isJumping = false;
             cat.currentFrame = 0; obstacles = []; obstacleTimer = 0;
             scoreElement.textContent = 'Счёт: 0';
@@ -294,9 +277,7 @@
         }, { passive: false });
 
         restartBtn.addEventListener('click', restart);
-        restartBtn.addEventListener('touchstart', (e) => { e.preventDefault(); restart(); });
 
-        // Запуск загрузки
         loadFrames();
     </script>
 </body>
