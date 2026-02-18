@@ -56,7 +56,6 @@
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // Инициализация Telegram
         try {
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -66,16 +65,11 @@
                 tg.BackButton.onClick(() => {
                     window.location.href = 'https://juvenalshaeffer-art.github.io/tamagotchi/';
                 });
-                console.log('✅ Telegram WebApp подключён');
             }
-        } catch(e) {
-            console.log('⚠️ Telegram WebApp не доступен (это нормально в браузере)');
-        }
+        } catch(e) { console.log('Telegram WebApp не доступен'); }
     </script>
 
     <script>
-        console.log('🎮 Игра загружается...');
-        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
@@ -85,35 +79,27 @@
         const finalScoreElement = document.getElementById('finalScore');
         const restartBtn = document.getElementById('restartBtn');
 
-        // Размер canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            console.log('📐 Размер canvas:', canvas.width, 'x', canvas.height);
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Параметры игры
         let gameRunning = false;
         let score = 0;
         let speed = 5;
         let frame = 0;
 
-        // Котик
         const cat = {
             x: 80, y: 0, width: 70, height: 70,
             velocityY: 0, jumping: false, groundY: 0
         };
 
-        // Препятствия
         let obstacles = [];
         let obstacleTimer = 0;
-
-        // Земля
         const groundHeight = 60;
 
-        // Рисуем котика (без картинок!)
         function drawCat() {
             ctx.save();
             ctx.translate(cat.x, cat.y);
@@ -134,7 +120,7 @@
             ctx.quadraticCurveTo(-5, 25 + tailWag, -10, 15 + tailWag);
             ctx.stroke();
 
-            // Лапы (анимация)
+            // Лапы
             const legOffset = cat.jumping ? 0 : Math.sin(frame * 0.3) * 8;
 
             // Задние лапы
@@ -241,7 +227,6 @@
             if (!cat.jumping && gameRunning) {
                 cat.velocityY = -15;
                 cat.jumping = true;
-                console.log('🦘 Прыжок!');
             }
         }
 
@@ -262,9 +247,16 @@
                 this.height = 30 + Math.random() * 30;
                 this.x = canvas.width;
                 this.y = canvas.height - groundHeight - this.height;
+                this.markedForDeletion = false;
             }
             update() {
                 this.x -= speed;
+                if (this.x + this.width < 0) {
+                    this.markedForDeletion = true;
+                    score++;
+                    scoreElement.textContent = 'Счёт: ' + score;
+                    if (score % 5 === 0) speed += 0.5;
+                }
             }
             draw() {
                 ctx.fillStyle = '#696969';
@@ -286,18 +278,41 @@
                 obs.update();
                 obs.draw();
 
-                // Столкновение
-                if (cat.x < obs.x + obs.width && cat.x + cat.width > obs.x &&
-                    cat.y < obs.y + obs.height && cat.y + cat.height > obs.y) {
-                    gameOver();
+                // ⚠️ ПРОВЕРКА СТОЛКНОВЕНИЙ — ИСПРАВЛЕНО!
+                const catBottom = cat.y + cat.height;
+                const catRight = cat.x + cat.width;
+                const catLeft = cat.x;
+                const obsTop = obs.y;
+                const obsBottom = obs.y + obs.height;
+                const obsLeft = obs.x;
+                const obsRight = obs.x + obs.width;
+
+                // Проверяем есть ли пересечение
+                const isColliding = catLeft < obsRight && catRight > obsLeft &&
+                                    catBottom > obsTop && cat.y < obsBottom;
+
+                if (isColliding) {
+                    // Проверяем: котик падает СВЕРХУ на камень?
+                    const isLandingOnTop = cat.velocityY > 0 &&  // падает вниз
+                                          catBottom - obsTop < 20 &&  // близко к верху камня
+                                          cat.y + cat.height / 2 < obsTop;  // центр кота выше верха камня
+
+                    if (isLandingOnTop) {
+                        // ✅ Котик приземлился сверху — убираем камень, игра продолжается
+                        obs.markedForDeletion = true;
+                        cat.velocityY = -5;  // небольшой отскок
+                        score++;
+                        scoreElement.textContent = 'Счёт: ' + score;
+                        if (score % 5 === 0) speed += 0.5;
+                    } else {
+                        // ❌ Удар сбоку — игра окончена
+                        gameOver();
+                    }
                 }
 
-                // Удаление и счёт
-                if (obs.x + obs.width < 0) {
+                // Удаление камней
+                if (obs.markedForDeletion) {
                     obstacles.splice(index, 1);
-                    score++;
-                    scoreElement.textContent = 'Счёт: ' + score;
-                    if (score % 5 === 0) speed += 0.5;
                 }
             });
         }
@@ -313,11 +328,9 @@
             gameRunning = false;
             finalScoreElement.textContent = score;
             gameOverScreen.style.display = 'block';
-            console.log('💀 Игра окончена! Счёт:', score);
         }
 
         function startGame() {
-            console.log('🚀 Игра началась!');
             score = 0;
             speed = 5;
             frame = 0;
@@ -349,18 +362,9 @@
             requestAnimationFrame(animate);
         }
 
-        // Кнопки
-        startBtn.addEventListener('click', () => {
-            console.log('👆 Нажата кнопка Старт');
-            startGame();
-        });
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
 
-        restartBtn.addEventListener('click', () => {
-            console.log('👆 Нажата кнопка Рестарт');
-            startGame();
-        });
-
-        // Управление
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -368,16 +372,11 @@
             }
         });
 
-        canvas.addEventListener('click', () => {
-            if (gameRunning) jump();
-        });
-
+        canvas.addEventListener('click', () => { if (gameRunning) jump(); });
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (gameRunning) jump();
         }, { passive: false });
-
-        console.log('✅ Игра готова к запуску! Нажмите "Начать игру"');
     </script>
 </body>
 </html>
