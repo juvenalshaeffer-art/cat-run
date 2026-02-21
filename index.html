@@ -42,6 +42,7 @@
         <div id="startScreen">
             <h2>🐱 Котик бежит!</h2>
             <p>Перепрыгивай через камни</p>
+            <p>⚠️ Остерегайся ям!</p>
             <p style="font-size: 14px;">Пробел или клик для прыжка</p>
             <button id="startBtn">▶️ Начать игру</button>
         </div>
@@ -93,22 +94,28 @@
 
         const cat = {
             x: 80, y: 0, width: 70, height: 70,
-            velocityY: 0, jumping: false, groundY: 0
+            velocityY: 0, jumping: false, groundY: 0,
+            inPit: false
         };
 
         let obstacles = [];
-        let obstacleTimer = 0;
+        let pits = [];
+        let lastObstacleX = 0;
+        let lastPitX = 0;
         const groundHeight = 60;
+        const minGap = 100; // Минимальный разрыв между препятствиями (больше ширины котика)
 
         function drawCat() {
             ctx.save();
             ctx.translate(cat.x, cat.y);
 
-            // Тень
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.beginPath();
-            ctx.ellipse(35, 68, 30, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
+            // Тень (только если не в яме)
+            if (!cat.inPit) {
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.beginPath();
+                ctx.ellipse(35, 68, 30, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             // Хвост
             ctx.strokeStyle = '#808080';
@@ -116,12 +123,12 @@
             ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(10, 35);
-            const tailWag = Math.sin(frame * 0.2) * 5;
+            const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.2) * 5;
             ctx.quadraticCurveTo(-5, 25 + tailWag, -10, 15 + tailWag);
             ctx.stroke();
 
             // Лапы
-            const legOffset = cat.jumping ? 0 : Math.sin(frame * 0.3) * 8;
+            const legOffset = cat.jumping || cat.inPit ? 0 : Math.sin(frame * 0.3) * 8;
 
             // Задние лапы
             ctx.fillStyle = '#909090';
@@ -224,13 +231,25 @@
         }
 
         function jump() {
-            if (!cat.jumping && gameRunning) {
+            if (!cat.jumping && gameRunning && !cat.inPit) {
                 cat.velocityY = -15;
                 cat.jumping = true;
             }
         }
 
         function updateCat() {
+            // Если в яме — котик падает
+            if (cat.inPit) {
+                cat.velocityY += 1.2;
+                cat.y += cat.velocityY;
+                
+                // Проверка: упал на дно ямы
+                if (cat.y >= cat.groundY + 50) {
+                    gameOver();
+                }
+                return;
+            }
+
             cat.velocityY += 0.8;
             cat.y += cat.velocityY;
 
@@ -241,10 +260,11 @@
             }
         }
 
+        // 🔵 Камень — полукруглый, плоский снизу
         class Obstacle {
             constructor() {
-                this.width = 30 + Math.random() * 25;
-                this.height = 30 + Math.random() * 30;
+                this.width = 40 + Math.random() * 30;
+                this.height = 25 + Math.random() * 20;
                 this.x = canvas.width;
                 this.y = canvas.height - groundHeight - this.height;
                 this.markedForDeletion = false;
@@ -259,26 +279,132 @@
                 }
             }
             draw() {
+                // Полукруг — плоский снизу, круглый сверху
                 ctx.fillStyle = '#696969';
                 ctx.beginPath();
-                ctx.ellipse(this.x + this.width/2, this.y + this.height/2, 
-                    this.width/2, this.height/2, 0, 0, Math.PI * 2);
+                ctx.moveTo(this.x, this.y + this.height);  // левый нижний угол
+                ctx.lineTo(this.x + this.width, this.y + this.height);  // правый нижний угол
+                ctx.arc(
+                    this.x + this.width / 2,  // центр X
+                    this.y + this.height,      // центр Y (на уровне земли)
+                    this.width / 2,            // радиус
+                    Math.PI,                   // от 180°
+                    0,                         // до 0°
+                    false                      // по часовой стрелке
+                );
+                ctx.fill();
+                
+                // Блик на камне
+                ctx.fillStyle = '#808080';
+                ctx.beginPath();
+                ctx.arc(
+                    this.x + this.width / 2 - 5,
+                    this.y + this.height - this.height / 2,
+                    this.width / 6,
+                    0, Math.PI * 2
+                );
                 ctx.fill();
             }
         }
 
+        // 🕳️ Яма — углубление в земле
+        class Pit {
+            constructor() {
+                this.width = 60 + Math.random() * 40;
+                this.depth = 50 + Math.random() * 30;
+                this.x = canvas.width;
+                this.y = canvas.height - groundHeight;
+                this.markedForDeletion = false;
+            }
+            update() {
+                this.x -= speed;
+                if (this.x + this.width < 0) {
+                    this.markedForDeletion = true;
+                }
+            }
+            draw() {
+                // Яма — трапеция с закруглёнными краями
+                ctx.fillStyle = '#5D4037';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);  // левый верхний (уровень земли)
+                
+                // Левая стенка ямы
+                ctx.quadraticCurveTo(
+                    this.x + 10, this.y + this.depth / 2,
+                    this.x + 15, this.y + this.depth
+                );
+                
+                // Дно ямы
+                ctx.lineTo(this.x + this.width - 15, this.y + this.depth);
+                
+                // Правая стенка ямы
+                ctx.quadraticCurveTo(
+                    this.x + this.width - 10, this.y + this.depth / 2,
+                    this.x + this.width, this.y
+                );
+                
+                ctx.closePath();
+                ctx.fill();
+                
+                // Тень внутри ямы
+                ctx.fillStyle = '#3E2723';
+                ctx.beginPath();
+                ctx.moveTo(this.x + 10, this.y + 5);
+                ctx.quadraticCurveTo(
+                    this.x + 15, this.y + this.depth - 10,
+                    this.x + 30, this.y + this.depth - 5
+                );
+                ctx.lineTo(this.x + this.width - 30, this.y + this.depth - 5);
+                ctx.quadraticCurveTo(
+                    this.x + this.width - 15, this.y + this.depth - 10,
+                    this.x + this.width - 10, this.y + 5
+                );
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        // 📏 Проверка минимального расстояния между препятствиями
+        function canSpawnObstacle(x) {
+            // Не ближе чем minGap от последнего камня
+            if (x < lastObstacleX - minGap) return false;
+            // Не ближе чем minGap от последней ямы
+            for (let pit of pits) {
+                if (Math.abs(x - pit.x) < minGap) return false;
+            }
+            return true;
+        }
+
+        function canSpawnPit(x) {
+            // Не ближе чем minGap от последнего камня
+            if (x < lastObstacleX - minGap) return false;
+            // Не ближе чем minGap от последней ямы
+            if (x < lastPitX - minGap * 2) return false;  // ямы реже
+            for (let obs of obstacles) {
+                if (Math.abs(x - obs.x) < minGap) return false;
+            }
+            return true;
+        }
+
         function handleObstacles() {
-            obstacleTimer++;
-            if (obstacleTimer > 90 + Math.random() * 60) {
+            // Спавн камней (неравномерно, но с минимальным зазором)
+            if (Math.random() < 0.015 && canSpawnObstacle(canvas.width)) {
                 obstacles.push(new Obstacle());
-                obstacleTimer = 0;
+                lastObstacleX = canvas.width;
             }
 
+            // Спавн ям (реже, чем камни)
+            if (Math.random() < 0.008 && canSpawnPit(canvas.width)) {
+                pits.push(new Pit());
+                lastPitX = canvas.width;
+            }
+
+            // Обновление и отрисовка камней
             obstacles.forEach((obs, index) => {
                 obs.update();
                 obs.draw();
 
-                // ⚠️ ПРОВЕРКА СТОЛКНОВЕНИЙ — ИСПРАВЛЕНО!
+                // Проверка столкновений с камнем
                 const catBottom = cat.y + cat.height;
                 const catRight = cat.x + cat.width;
                 const catLeft = cat.x;
@@ -287,32 +413,47 @@
                 const obsLeft = obs.x;
                 const obsRight = obs.x + obs.width;
 
-                // Проверяем есть ли пересечение
                 const isColliding = catLeft < obsRight && catRight > obsLeft &&
                                     catBottom > obsTop && cat.y < obsBottom;
 
                 if (isColliding) {
-                    // Проверяем: котик падает СВЕРХУ на камень?
-                    const isLandingOnTop = cat.velocityY > 0 &&  // падает вниз
-                                          catBottom - obsTop < 20 &&  // близко к верху камня
-                                          cat.y + cat.height / 2 < obsTop;  // центр кота выше верха камня
+                    const isLandingOnTop = cat.velocityY > 0 &&
+                                          catBottom - obsTop < 20 &&
+                                          cat.y + cat.height / 2 < obsTop;
 
                     if (isLandingOnTop) {
-                        // ✅ Котик приземлился сверху — убираем камень, игра продолжается
                         obs.markedForDeletion = true;
-                        cat.velocityY = -5;  // небольшой отскок
+                        cat.velocityY = -5;
                         score++;
                         scoreElement.textContent = 'Счёт: ' + score;
                         if (score % 5 === 0) speed += 0.5;
                     } else {
-                        // ❌ Удар сбоку — игра окончена
                         gameOver();
                     }
                 }
 
-                // Удаление камней
                 if (obs.markedForDeletion) {
                     obstacles.splice(index, 1);
+                }
+            });
+
+            // Обновление и отрисовка ям
+            pits.forEach((pit, index) => {
+                pit.update();
+                pit.draw();
+
+                // Проверка: котик попал в яму?
+                const catCenterX = cat.x + cat.width / 2;
+                const catOnGround = cat.y >= cat.groundY - 5 && !cat.jumping;
+                
+                if (catOnGround && 
+                    catCenterX > pit.x + 10 && 
+                    catCenterX < pit.x + pit.width - 10) {
+                    cat.inPit = true;
+                }
+
+                if (pit.markedForDeletion) {
+                    pits.splice(index, 1);
                 }
             });
         }
@@ -320,6 +461,7 @@
         function drawGround() {
             ctx.fillStyle = '#8B4513';
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+            
             ctx.fillStyle = '#228B22';
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 10);
         }
@@ -335,10 +477,13 @@
             speed = 5;
             frame = 0;
             obstacles = [];
-            obstacleTimer = 0;
+            pits = [];
+            lastObstacleX = 0;
+            lastPitX = 0;
             cat.y = cat.groundY;
             cat.velocityY = 0;
             cat.jumping = false;
+            cat.inPit = false;
             scoreElement.textContent = 'Счёт: 0';
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'none';
