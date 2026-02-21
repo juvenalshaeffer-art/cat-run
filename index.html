@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Котик бежит - Dendy Style</title>
+    <title>Котик бежит - Sega Style</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
         body {
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; background: #000;
-            font-family: 'Courier New', monospace; overflow: hidden; width: 100vw; height: 100vh;
+            font-family: 'Arial', sans-serif; overflow: hidden; width: 100vw; height: 100vh;
         }
         #gameContainer { position: relative; width: 100%; height: 100%; }
         #gameCanvas { 
@@ -18,44 +18,85 @@
             image-rendering: crisp-edges;
         }
         #score {
-            position: absolute; top: 10px; left: 10px; font-size: 20px;
-            font-weight: bold; color: #fff; background: rgba(0,0,0,0.8);
-            padding: 8px 15px; border-radius: 0; border: 2px solid #fff; z-index: 10;
-            font-family: 'Courier New', monospace;
+            position: absolute; top: 15px; left: 15px; font-size: 22px;
+            font-weight: bold; color: #fff; text-shadow: 2px 2px 0 #000;
+            padding: 10px 20px; z-index: 10;
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(180deg, #0080FF 0%, #004080 100%);
+            border: 3px solid #fff;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
         #doubleJumpIndicator {
-            position: absolute; top: 10px; right: 10px; font-size: 14px;
-            background: rgba(0,0,0,0.8); padding: 8px 15px;
-            border-radius: 0; border: 2px solid #fff; z-index: 10;
-            color: #0f0; font-family: 'Courier New', monospace;
+            position: absolute; top: 15px; right: 15px; font-size: 16px;
+            padding: 10px 20px; z-index: 10;
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(180deg, #00FF00 0%, #008000 100%);
+            border: 3px solid #fff;
+            color: #000; text-shadow: none;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
         #startScreen, #gameOver {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9); padding: 30px; border-radius: 0;
-            text-align: center; border: 4px solid #fff; z-index: 20;
+            background: linear-gradient(180deg, #1a1a4e 0%, #0a0a2e 100%);
+            padding: 40px 50px; text-align: center;
+            border: 4px solid #00FFFF;
+            box-shadow: 0 0 20px rgba(0,255,255,0.5), inset 0 0 30px rgba(0,0,0,0.8);
+            z-index: 20;
+            min-width: 300px;
         }
-        #gameOver { display: none; }
-        h2 { margin: 0 0 15px 0; color: #ff0; font-size: 24px; font-family: 'Courier New', monospace; }
-        p { margin: 10px 0; color: #fff; font-family: 'Courier New', monospace; }
+        #gameOver { display: none; border-color: #FF0000; box-shadow: 0 0 20px rgba(255,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.8); }
+        h2 { 
+            margin: 0 0 20px 0; 
+            font-size: 32px; 
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(180deg, #FFFF00 0%, #FF8000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 3px 3px 0 #000;
+            letter-spacing: 2px;
+        }
+        p { margin: 12px 0; color: #fff; font-size: 16px; text-shadow: 1px 1px 0 #000; }
         button {
-            margin-top: 15px; padding: 15px 40px; font-size: 18px;
-            background: #0f0; color: #000; border: 4px solid #fff;
-            cursor: pointer; font-family: 'Courier New', monospace;
+            margin-top: 20px; padding: 15px 50px; font-size: 20px;
+            background: linear-gradient(180deg, #00FF00 0%, #008000 100%);
+            color: #000; border: 3px solid #fff;
+            cursor: pointer; font-weight: bold;
+            font-family: 'Arial Black', sans-serif;
+            box-shadow: 0 4px 0 #004000, 0 6px 10px rgba(0,0,0,0.5);
         }
-        button:active { background: #0a0; }
+        button:active { 
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #004000, 0 2px 5px rgba(0,0,0,0.5);
+        }
         
-        /* Scanline effect */
         #scanlines {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(
                 0deg,
-                rgba(0,0,0,0.1) 0px,
-                rgba(0,0,0,0.1) 1px,
-                transparent 1px,
-                transparent 2px
+                rgba(0,0,0,0.15) 0px,
+                rgba(0,0,0,0.15) 2px,
+                transparent 2px,
+                transparent 4px
             );
             pointer-events: none;
             z-index: 100;
+            opacity: 0.6;
+        }
+        
+        #vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none;
+            z-index: 101;
+        }
+        
+        .sega-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00FFFF;
+            text-shadow: 2px 2px 0 #000080, -1px -1px 0 #000080;
+            margin-bottom: 15px;
+            letter-spacing: 4px;
         }
     </style>
 </head>
@@ -63,22 +104,25 @@
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         <div id="scanlines"></div>
+        <div id="vignette"></div>
         <div id="score">СЧЁТ: 0</div>
         <div id="doubleJumpIndicator">2X ПРЫЖОК: ГОТОВ</div>
         
         <div id="startScreen">
+            <div class="sega-logo">⚡ SEGA STYLE ⚡</div>
             <h2>🐱 КОТИК БЕЖИТ</h2>
-            <p>ПРЫГАЙ ЧЕРЕЗ КАМНИ</p>
-            <p>⚠️ БОЙСЯ ЯМ!</p>
-            <p style="font-size: 14px; color: #0f0;">ПРОБЕЛ или КЛИК для прыжка</p>
-            <p style="font-size: 13px; color: #ff0;">🦘 В воздухе можно ещё раз!</p>
-            <button id="startBtn">▶ НАЧАТЬ</button>
+            <p>🪨 ПРЫГАЙ ЧЕРЕЗ КАМНИ</p>
+            <p>🕳️ ИЗБЕГАЙ ЯМ!</p>
+            <p style="color: #00FF00;">ПРОБЕЛ или КЛИК для прыжка</p>
+            <p style="color: #FFFF00; font-size: 14px;">🦘 Двойной прыжок в воздухе!</p>
+            <button id="startBtn">▶ НАЧАТЬ ИГРУ</button>
         </div>
         
         <div id="gameOver">
-            <h2>💀 ИГРА ОКОНЧЕНА</h2>
-            <p>СЧЁТ: <span id="finalScore">0</span></p>
-            <button id="restartBtn">↻ ЗАНОВО</button>
+            <div class="sega-logo" style="color: #FF0000;">💀 GAME OVER 💀</div>
+            <h2>ИГРА ОКОНЧЕНА</h2>
+            <p>ФИНАЛЬНЫЙ СЧЁТ: <span id="finalScore" style="color: #00FF00; font-weight: bold;">0</span></p>
+            <button id="restartBtn">↻ ИГРАТЬ СНОВА</button>
         </div>
     </div>
 
@@ -111,8 +155,7 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // 🎮 DENDY ПАРАМЕТРЫ
-        const PIXEL_SIZE = 4; // Размер одного "пикселя"
+        const PIXEL_SIZE = 2;
         const JUMP_VELOCITY = -15;
         const DOUBLE_JUMP_VELOCITY = -12;
         const GRAVITY = 0.8;
@@ -124,23 +167,21 @@
         const MAX_JUMP_DISTANCE = SINGLE_JUMP_DISTANCE * 1.5;
         const MIN_GAP = (MAX_JUMP_DISTANCE * 1.5) + CAT_WIDTH;
 
-        // 🎨 DENDY ПАЛИТРА
         const COLORS = {
-            sky: '#5C94FC',      // Небо NES
-            ground: '#C84C0C',   // Земля
-            grass: '#00A800',    // Трава
-            cat: '#A0A0A0',      // Кот серый
-            catDark: '#606060',  // Кот тёмный
-            catLight: '#D0D0D0', // Кот светлый
-            catEye: '#F8B800',   // Глаза
-            rock: '#808080',     // Камень
-            rockDark: '#505050', // Камень тёмный
-            pit: '#583820',      // Яма
-            tree: '#00A800',     // Дерево
-            trunk: '#804000',    // Ствол
-            cloud: '#FFFFFF',    // Облако
-            white: '#FFFFFF',
-            black: '#000000'
+            sky1: '#0060A0', sky2: '#0080C0', sky3: '#40A0E0',
+            ground: '#804000', groundLight: '#A06020',
+            grass: '#00A800', grassLight: '#00D000',
+            cat1: '#C0C0C0', cat2: '#A0A0A0', cat3: '#808080',
+            cat4: '#606060', catLight: '#E0E0E0', catShadow: '#404040',
+            catEye: '#FFD000', catEyeDark: '#804000',
+            catNose: '#FF80A0', catInner: '#FFC0D0',
+            rock1: '#808080', rock2: '#606060', rock3: '#A0A0A0', rockShadow: '#404040',
+            pit1: '#604020', pit2: '#403018', pit3: '#201810',
+            tree1: '#008000', tree2: '#00A000', tree3: '#00C000',
+            trunk1: '#603000', trunk2: '#804000',
+            cloud1: '#FFFFFF', cloud2: '#E0E0E0', cloud3: '#C0C0C0',
+            mountain1: '#406080', mountain2: '#6080A0', mountain3: '#80A0C0',
+            ui1: '#00FFFF', ui2: '#0080FF', ui3: '#FFFF00', ui4: '#00FF00', ui5: '#FF0000'
         };
 
         let gameRunning = false;
@@ -152,152 +193,247 @@
             x: 80, y: 0, width: CAT_WIDTH, height: CAT_HEIGHT,
             velocityY: 0, jumping: false, groundY: 0,
             inPit: false, canDoubleJump: false, hasDoubleJumped: false,
-            animFrame: 0
+            animFrame: 0, direction: 1
         };
 
         let obstacles = [];
         let pits = [];
         let backgroundElements = [];
+        let mountains = [];
 
         function updateDoubleJumpIndicator() {
             if (cat.canDoubleJump && !cat.hasDoubleJumped) {
                 doubleJumpIndicator.textContent = '2X ПРЫЖОК: ГОТОВ';
-                doubleJumpIndicator.style.color = '#0f0';
+                doubleJumpIndicator.style.background = 'linear-gradient(180deg, #00FF00 0%, #008000 100%)';
             } else {
                 doubleJumpIndicator.textContent = '2X ПРЫЖОК: НЕТ';
-                doubleJumpIndicator.style.color = '#666';
+                doubleJumpIndicator.style.background = 'linear-gradient(180deg, #808080 0%, #404040 100%)';
             }
         }
 
-        // 🐱 РИСУЕМ КОТИКА В ПИКСЕЛЬНОМ СТИЛЕ
-        function drawPixelCat() {
-            const x = Math.floor(cat.x);
-            const y = Math.floor(cat.y);
-            const p = PIXEL_SIZE; // pixel size
-
-            ctx.save();
-            
-            // Тень
-            if (!cat.inPit) {
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.fillRect(x + 10, y + CAT_HEIGHT - 5, CAT_WIDTH - 20, 8);
-            }
-
-            // Хвост (анимация)
-            ctx.fillStyle = COLORS.cat;
-            const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.3) * 8;
-            ctx.fillRect(x - 20, y + 20 + tailWag, 20, 8);
-            ctx.fillRect(x - 28, y + 15 + tailWag, 12, 8);
-
-            // Тело
-            ctx.fillStyle = COLORS.cat;
-            ctx.fillRect(x + 10, y + 25, 45, 25);
-            
-            // Полоски на теле
-            ctx.fillStyle = COLORS.catDark;
-            ctx.fillRect(x + 20, y + 28, 6, 20);
-            ctx.fillRect(x + 32, y + 28, 6, 20);
-
-            // Голова
-            ctx.fillStyle = COLORS.cat;
-            ctx.fillRect(x + 45, y + 15, 25, 22);
-
-            // Уши
-            ctx.fillStyle = COLORS.cat;
-            ctx.fillRect(x + 48, y + 8, 6, 10);
-            ctx.fillRect(x + 62, y + 8, 6, 10);
-            ctx.fillStyle = '#FFB6C1';
-            ctx.fillRect(x + 50, y + 10, 4, 6);
-            ctx.fillRect(x + 64, y + 10, 4, 6);
-
-            // Глаза
-            ctx.fillStyle = COLORS.white;
-            ctx.fillRect(x + 52, y + 18, 8, 8);
-            ctx.fillRect(x + 64, y + 18, 8, 8);
-            ctx.fillStyle = COLORS.catEye;
-            ctx.fillRect(x + 54, y + 20, 4, 4);
-            ctx.fillRect(x + 66, y + 20, 4, 4);
-            ctx.fillStyle = COLORS.black;
-            ctx.fillRect(x + 55, y + 21, 2, 2);
-            ctx.fillRect(x + 67, y + 21, 2, 2);
-
-            // Нос
-            ctx.fillStyle = '#FFB6C1';
-            ctx.fillRect(x + 68, y + 26, 4, 4);
-
-            // Усы
-            ctx.fillStyle = COLORS.white;
-            ctx.fillRect(x + 42, y + 24, 10, 2);
-            ctx.fillRect(x + 42, y + 28, 10, 2);
-
-            // Лапы (анимация бега)
-            const legOffset = cat.jumping || cat.inPit ? 0 : Math.sin(frame * 0.4) * 10;
-            ctx.fillStyle = COLORS.cat;
-            
-            // Задние
-            ctx.fillRect(x + 15 + legOffset, y + 48, 8, 12);
-            ctx.fillRect(x + 30 - legOffset, y + 48, 8, 12);
-            
-            // Передние
-            ctx.fillRect(x + 48 + legOffset, y + 48, 8, 12);
-            ctx.fillRect(x + 60 - legOffset, y + 48, 8, 12);
-
-            ctx.restore();
-        }
-
-        // 🌲 ДЕРЕВО В ПИКСЕЛЬНОМ СТИЛЕ
-        class PixelTree {
+        class Mountain {
             constructor(x) {
-                this.x = x || canvas.width + Math.random() * 200;
-                this.height = 60 + Math.random() * 80;
-                this.speed = speed * 0.3;
-                this.variation = Math.floor(Math.random() * 2);
+                this.x = x || canvas.width + Math.random() * 300;
+                this.width = 150 + Math.random() * 200;
+                this.height = 100 + Math.random() * 150;
+                this.speed = speed * 0.1;
+                this.peaks = 3 + Math.floor(Math.random() * 3);
+                this.color = Math.random() > 0.5 ? COLORS.mountain1 : COLORS.mountain2;
             }
             update() { this.x -= this.speed; }
             draw() {
-                const p = PIXEL_SIZE;
-                const groundY = canvas.height - 60;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(this.x, canvas.height - 60);
+                for (let i = 0; i <= this.peaks; i++) {
+                    const px = this.x + (i * this.width / this.peaks);
+                    const py = canvas.height - 60 - this.height + Math.sin(i) * 30;
+                    ctx.lineTo(px, py);
+                }
+                ctx.lineTo(this.x + this.width, canvas.height - 60);
+                ctx.closePath();
+                ctx.fill();
                 
-                // Ствол
-                ctx.fillStyle = COLORS.trunk;
-                ctx.fillRect(this.x - 6, groundY - this.height, 12, this.height);
-                
-                // Крона
-                ctx.fillStyle = COLORS.tree;
-                if (this.variation === 0) {
-                    // Круглая
-                    ctx.fillRect(this.x - 25, groundY - this.height - 35, 50, 40);
-                    ctx.fillRect(this.x - 20, groundY - this.height - 45, 40, 15);
-                } else {
-                    // Треугольная (ёлка)
-                    ctx.fillRect(this.x - 30, groundY - this.height - 20, 60, 25);
-                    ctx.fillRect(this.x - 25, groundY - this.height - 40, 50, 25);
-                    ctx.fillRect(this.x - 20, groundY - this.height - 55, 40, 20);
+                ctx.fillStyle = '#FFFFFF';
+                for (let i = 1; i < this.peaks; i++) {
+                    const px = this.x + (i * this.width / this.peaks);
+                    const py = canvas.height - 60 - this.height + Math.sin(i) * 30;
+                    ctx.beginPath();
+                    ctx.moveTo(px - 15, py + 20);
+                    ctx.lineTo(px, py);
+                    ctx.lineTo(px + 15, py + 20);
+                    ctx.fill();
                 }
             }
         }
 
-        // ☁️ ОБЛАКО В ПИКСЕЛЬНОМ СТИЛЕ
-        class PixelCloud {
+        class SegaTree {
+            constructor(x) {
+                this.x = x || canvas.width + Math.random() * 200;
+                this.height = 80 + Math.random() * 100;
+                this.speed = speed * 0.3;
+                this.variation = Math.floor(Math.random() * 3);
+            }
+            update() { this.x -= this.speed; }
+            draw() {
+                const groundY = canvas.height - 60;
+                
+                ctx.fillStyle = COLORS.trunk1;
+                ctx.fillRect(this.x - 8, groundY - this.height, 16, this.height);
+                ctx.fillStyle = COLORS.trunk2;
+                ctx.fillRect(this.x - 6, groundY - this.height + 10, 8, this.height - 20);
+                ctx.fillStyle = '#402000';
+                ctx.fillRect(this.x - 4, groundY - this.height + 20, 4, this.height - 40);
+                
+                if (this.variation === 0) {
+                    ctx.fillStyle = COLORS.tree1;
+                    ctx.fillRect(this.x - 35, groundY - this.height - 50, 70, 60);
+                    ctx.fillStyle = COLORS.tree2;
+                    ctx.fillRect(this.x - 30, groundY - this.height - 45, 60, 50);
+                    ctx.fillStyle = COLORS.tree3;
+                    ctx.fillRect(this.x - 25, groundY - this.height - 40, 50, 40);
+                } else if (this.variation === 1) {
+                    ctx.fillStyle = COLORS.tree1;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, groundY - this.height - 80);
+                    ctx.lineTo(this.x - 40, groundY - this.height - 20);
+                    ctx.lineTo(this.x + 40, groundY - this.height - 20);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = COLORS.tree2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, groundY - this.height - 60);
+                    ctx.lineTo(this.x - 35, groundY - this.height - 10);
+                    ctx.lineTo(this.x + 35, groundY - this.height - 10);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = COLORS.trunk1;
+                    ctx.fillRect(this.x - 6, groundY - this.height - 30, 12, this.height + 30);
+                    ctx.fillStyle = COLORS.tree1;
+                    for (let i = 0; i < 7; i++) {
+                        const angle = (i / 7) * Math.PI - Math.PI / 2;
+                        ctx.fillRect(
+                            this.x + Math.cos(angle) * 30 - 3,
+                            groundY - this.height - 35 + Math.sin(angle) * 10,
+                            6, 25
+                        );
+                    }
+                }
+            }
+        }
+
+        class SegaCloud {
             constructor(x) {
                 this.x = x || canvas.width + Math.random() * 300;
-                this.y = 40 + Math.random() * 100;
-                this.width = 60 + Math.random() * 50;
+                this.y = 30 + Math.random() * 120;
+                this.width = 80 + Math.random() * 80;
                 this.speed = speed * 0.15;
             }
             update() { this.x -= this.speed; }
             draw() {
-                ctx.fillStyle = COLORS.cloud;
-                ctx.fillRect(this.x, this.y, this.width, 20);
-                ctx.fillRect(this.x + 15, this.y - 12, this.width - 30, 15);
+                ctx.fillStyle = COLORS.cloud1;
+                ctx.fillRect(this.x, this.y, this.width, 25);
+                ctx.fillRect(this.x + 15, this.y - 15, this.width - 30, 20);
+                ctx.fillRect(this.x + 30, this.y - 25, this.width - 60, 15);
+                
+                ctx.fillStyle = COLORS.cloud2;
+                ctx.fillRect(this.x + 10, this.y + 20, this.width - 40, 8);
+                ctx.fillRect(this.x + 25, this.y + 5, this.width - 60, 10);
             }
         }
 
-        // 🪨 КАМЕНЬ В ПИКСЕЛЬНОМ СТИЛЕ
-        class PixelRock {
+        // 🐱 КОТИК — ИСПРАВЛЕННЫЙ (без тени, усы с двух сторон)
+        function drawSegaCat() {
+            const x = Math.floor(cat.x);
+            const y = Math.floor(cat.y);
+            const p = PIXEL_SIZE;
+
+            ctx.save();
+
+            // ❌ ТЕНЬ УБРАНА
+
+            // Хвост (анимация)
+            const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.25) * 12;
+            
+            ctx.fillStyle = COLORS.cat2;
+            ctx.fillRect(x - 35, y + 35 + tailWag, 25, 10);
+            ctx.fillRect(x - 45, y + 30 + tailWag, 15, 10);
+            ctx.fillStyle = COLORS.cat3;
+            ctx.fillRect(x - 35, y + 37 + tailWag, 25, 6);
+            ctx.fillRect(x - 45, y + 32 + tailWag, 15, 6);
+
+            // Лапы (анимация)
+            const legOffset = cat.jumping || cat.inPit ? 0 : Math.sin(frame * 0.35) * 12;
+            
+            ctx.fillStyle = COLORS.cat2;
+            ctx.fillRect(x + 18 + legOffset, y + 52, 10, 14);
+            ctx.fillRect(x + 35 - legOffset, y + 52, 10, 14);
+            
+            ctx.fillStyle = COLORS.catInner;
+            ctx.fillRect(x + 18 + legOffset, y + 62, 10, 4);
+            ctx.fillRect(x + 35 - legOffset, y + 62, 10, 4);
+
+            // Тело
+            ctx.fillStyle = COLORS.cat1;
+            ctx.fillRect(x + 15, y + 30, 50, 28);
+            ctx.fillStyle = COLORS.cat2;
+            ctx.fillRect(x + 15, y + 45, 50, 13);
+            
+            // Полоски на спине
+            ctx.fillStyle = COLORS.cat4;
+            ctx.fillRect(x + 22, y + 32, 8, 24);
+            ctx.fillRect(x + 38, y + 32, 8, 24);
+            ctx.fillRect(x + 54, y + 32, 6, 24);
+
+            // Передние лапы
+            ctx.fillStyle = COLORS.cat2;
+            ctx.fillRect(x + 52 + legOffset, y + 52, 10, 14);
+            ctx.fillRect(x + 67 - legOffset, y + 52, 10, 14);
+            ctx.fillStyle = COLORS.catInner;
+            ctx.fillRect(x + 52 + legOffset, y + 62, 10, 4);
+            ctx.fillRect(x + 67 - legOffset, y + 62, 10, 4);
+
+            // Голова
+            ctx.fillStyle = COLORS.cat1;
+            ctx.fillRect(x + 50, y + 18, 32, 26);
+            ctx.fillStyle = COLORS.cat2;
+            ctx.fillRect(x + 50, y + 32, 32, 12);
+
+            // Уши
+            ctx.fillStyle = COLORS.cat2;
+            ctx.fillRect(x + 52, y + 10, 10, 12);
+            ctx.fillRect(x + 70, y + 10, 10, 12);
+            ctx.fillStyle = COLORS.catInner;
+            ctx.fillRect(x + 54, y + 12, 6, 8);
+            ctx.fillRect(x + 72, y + 12, 6, 8);
+
+            // Глаза
+            ctx.fillStyle = COLORS.catLight;
+            ctx.fillRect(x + 56, y + 22, 12, 12);
+            ctx.fillRect(x + 72, y + 22, 12, 12);
+            
+            ctx.fillStyle = COLORS.catEye;
+            ctx.fillRect(x + 58, y + 24, 8, 8);
+            ctx.fillRect(x + 74, y + 24, 8, 8);
+            
+            ctx.fillStyle = COLORS.catEyeDark;
+            ctx.fillRect(x + 60, y + 26, 4, 4);
+            ctx.fillRect(x + 76, y + 26, 4, 4);
+            
+            // Блик в глазах
+            ctx.fillStyle = COLORS.catLight;
+            ctx.fillRect(x + 61, y + 25, 2, 2);
+            ctx.fillRect(x + 77, y + 25, 2, 2);
+
+            // Нос
+            ctx.fillStyle = COLORS.catNose;
+            ctx.fillRect(x + 78, y + 32, 6, 5);
+
+            // ✅ УСЫ С ОБЕИХ СТОРОН
+            ctx.fillStyle = COLORS.catLight;
+            // Левая сторона (было)
+            ctx.fillRect(x + 48, y + 30, 12, 2);
+            ctx.fillRect(x + 48, y + 34, 12, 2);
+            ctx.fillRect(x + 48, y + 38, 12, 2);
+            // Правая сторона (добавлено)
+            ctx.fillRect(x + 82, y + 30, 12, 2);
+            ctx.fillRect(x + 82, y + 34, 12, 2);
+            ctx.fillRect(x + 82, y + 38, 12, 2);
+
+            // Ошейник
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(x + 52, y + 42, 28, 5);
+            ctx.fillStyle = '#FFD000';
+            ctx.fillRect(x + 64, y + 43, 6, 6);
+
+            ctx.restore();
+        }
+
+        class SegaRock {
             constructor(x) {
-                this.width = 40 + Math.random() * 30;
-                this.height = 25 + Math.random() * 20;
+                this.width = 45 + Math.random() * 35;
+                this.height = 30 + Math.random() * 25;
                 this.x = x || canvas.width;
                 this.y = canvas.height - 60 - this.height;
                 this.markedForDeletion = false;
@@ -312,26 +448,31 @@
                 }
             }
             draw() {
-                ctx.fillStyle = COLORS.rock;
-                // Полукруглая форма из пикселей
-                const steps = 8;
-                for (let i = 0; i < steps; i++) {
-                    const y = this.y + this.height - (i * this.height / steps);
-                    const width = this.width * Math.sin((i / steps) * Math.PI);
-                    ctx.fillRect(this.x + (this.width - width) / 2, y, width, this.height / steps);
-                }
+                ctx.fillStyle = COLORS.rock1;
+                ctx.fillRect(this.x + 10, this.y, this.width - 20, this.height);
+                ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
                 
-                // Блик
-                ctx.fillStyle = COLORS.rockDark;
-                ctx.fillRect(this.x + 8, this.y + 8, this.width - 16, 6);
+                ctx.fillStyle = COLORS.rock2;
+                ctx.fillRect(this.x + 15, this.y + 5, this.width - 30, this.height - 10);
+                
+                ctx.fillStyle = COLORS.rock3;
+                ctx.fillRect(this.x + 12, this.y + 8, this.width - 35, 8);
+                ctx.fillRect(this.x + 18, this.y + 12, this.width - 40, 6);
+                
+                ctx.fillStyle = COLORS.rockShadow;
+                ctx.fillRect(this.x + 8, this.y + this.height - 8, this.width - 16, 8);
+                
+                ctx.fillStyle = '#505050';
+                ctx.fillRect(this.x + 20, this.y + 15, 2, 12);
+                ctx.fillRect(this.x + 35, this.y + 18, 2, 10);
+                ctx.fillRect(this.x + this.width - 25, this.y + 12, 2, 14);
             }
         }
 
-        // 🕳️ ЯМА В ПИКСЕЛЬНОМ СТИЛЕ
-        class PixelPit {
+        class SegaPit {
             constructor(x) {
-                this.width = 60 + Math.random() * 40;
-                this.depth = 50 + Math.random() * 30;
+                this.width = 70 + Math.random() * 50;
+                this.depth = 55 + Math.random() * 35;
                 this.x = x || canvas.width;
                 this.y = canvas.height - 60;
                 this.markedForDeletion = false;
@@ -341,43 +482,70 @@
                 if (this.x + this.width < 0) this.markedForDeletion = true;
             }
             draw() {
-                ctx.fillStyle = COLORS.pit;
+                ctx.fillStyle = COLORS.pit1;
                 ctx.fillRect(this.x, this.y, this.width, this.depth);
                 
-                // Тень внутри
-                ctx.fillStyle = '#382818';
-                ctx.fillRect(this.x + 10, this.y + 10, this.width - 20, this.depth - 15);
+                ctx.fillStyle = COLORS.pit2;
+                ctx.fillRect(this.x + 8, this.y + 8, this.width - 16, this.depth - 15);
+                
+                ctx.fillStyle = COLORS.pit3;
+                ctx.fillRect(this.x + 15, this.y + 20, this.width - 30, this.depth - 30);
+                
+                ctx.fillStyle = COLORS.grass;
+                ctx.fillRect(this.x - 5, this.y - 5, this.width + 10, 8);
+                ctx.fillStyle = COLORS.grassLight;
+                ctx.fillRect(this.x - 3, this.y - 3, this.width + 6, 4);
+                
+                ctx.fillStyle = COLORS.rock2;
+                ctx.fillRect(this.x + 20, this.y + this.depth - 10, 12, 8);
+                ctx.fillRect(this.x + this.width - 35, this.y + this.depth - 12, 15, 10);
             }
         }
 
         function initBackground() {
             backgroundElements = [];
-            for (let i = 0; i < 6; i++) backgroundElements.push(new PixelTree(i * 180));
-            for (let i = 0; i < 5; i++) backgroundElements.push(new PixelCloud(i * 220));
+            mountains = [];
+            
+            for (let i = 0; i < 4; i++) {
+                mountains.push(new Mountain(i * 250));
+            }
+            
+            for (let i = 0; i < 7; i++) {
+                backgroundElements.push(new SegaTree(i * 160));
+            }
+            
+            for (let i = 0; i < 6; i++) {
+                backgroundElements.push(new SegaCloud(i * 200));
+            }
         }
 
         function drawBackground() {
-            // Небо градиент
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, COLORS.sky);
-            gradient.addColorStop(0.6, '#88C8F8');
-            gradient.addColorStop(1, COLORS.ground);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+            gradient.addColorStop(0, COLORS.sky1);
+            gradient.addColorStop(0.5, COLORS.sky2);
+            gradient.addColorStop(1, COLORS.sky3);
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Дальние холмы (пиксельные)
-            ctx.fillStyle = '#78B850';
-            ctx.fillRect(0, canvas.height - 100, canvas.width, 40);
+            ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
         }
 
         function updateBackground() {
+            mountains.forEach((m, i) => {
+                m.speed = speed * 0.1;
+                m.update();
+                m.draw();
+                if (m.x + m.width < -100) {
+                    mountains.splice(i, 1);
+                    mountains.push(new Mountain());
+                }
+            });
+            
             backgroundElements.forEach((el, i) => {
-                el.speed = speed * (el instanceof PixelTree ? 0.3 : 0.15);
+                el.speed = speed * (el instanceof SegaTree ? 0.3 : 0.15);
                 el.update();
                 el.draw();
-                if (el.x < -100) {
+                if (el.x < -150) {
                     backgroundElements.splice(i, 1);
-                    backgroundElements.push(el instanceof PixelTree ? new PixelTree() : new PixelCloud());
+                    backgroundElements.push(el instanceof SegaTree ? new SegaTree() : new SegaCloud());
                 }
             });
         }
@@ -421,12 +589,12 @@
         function handleObstacles() {
             if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - MIN_GAP) {
                 if (Math.random() < 0.03) {
-                    obstacles.push(new PixelRock(canvas.width + Math.random() * 100));
+                    obstacles.push(new SegaRock(canvas.width + Math.random() * 100));
                 }
             }
             if (pits.length === 0 || pits[pits.length - 1].x < canvas.width - MIN_GAP * 1.5) {
                 if (Math.random() < 0.015) {
-                    pits.push(new PixelPit(canvas.width + Math.random() * 100));
+                    pits.push(new SegaPit(canvas.width + Math.random() * 100));
                 }
             }
 
@@ -464,13 +632,23 @@
         function drawGround() {
             ctx.fillStyle = COLORS.ground;
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
-            ctx.fillStyle = COLORS.grass;
-            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 12);
             
-            // Пиксельная трава
-            ctx.fillStyle = '#00D800';
-            for (let i = 0; i < canvas.width; i += 20) {
-                ctx.fillRect(i, canvas.height - groundHeight - 4, 8, 4);
+            ctx.fillStyle = COLORS.groundLight;
+            ctx.fillRect(0, canvas.height - groundHeight + 15, canvas.width, groundHeight - 15);
+            
+            ctx.fillStyle = COLORS.grass;
+            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 14);
+            
+            ctx.fillStyle = COLORS.grassLight;
+            for (let i = 0; i < canvas.width; i += 25) {
+                const h = 6 + Math.sin(i + frame * 0.5) * 3;
+                ctx.fillRect(i, canvas.height - groundHeight - h, 12, h);
+            }
+            
+            ctx.fillStyle = '#603000';
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.fillRect(i + (frame % 40), canvas.height - groundHeight + 20, 20, 4);
+                ctx.fillRect(i + 15 + (frame % 40), canvas.height - groundHeight + 35, 15, 3);
             }
         }
 
@@ -503,7 +681,7 @@
             updateBackground();
             drawGround();
             updateCat();
-            drawPixelCat();
+            drawSegaCat();
             handleObstacles();
             frame++;
             requestAnimationFrame(animate);
