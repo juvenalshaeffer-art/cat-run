@@ -196,6 +196,7 @@
         let obstacles = [];
         let pits = [];
         let backgroundElements = [];
+        const groundHeight = 60;
 
         function updateDoubleJumpIndicator() {
             if (cat.canDoubleJump && !cat.hasDoubleJumped) {
@@ -216,7 +217,7 @@
             }
             update() { this.x -= this.speed; }
             draw() {
-                const groundY = canvas.height - 60;
+                const groundY = canvas.height - groundHeight;
                 
                 ctx.fillStyle = COLORS.trunk1;
                 ctx.fillRect(this.x - 8, groundY - this.height, 16, this.height);
@@ -283,18 +284,17 @@
             }
         }
 
-        // 🐱 КОТИК — ИСПРАВЛЕННЫЙ (без ошейника, хвост ближе к телу)
         function drawSegaCat() {
             const x = Math.floor(cat.x);
             const y = Math.floor(cat.y);
 
             ctx.save();
 
-            // ✅ ХВОСТ БЛИЖЕ К ТЕЛУ (было x - 35, стало x - 20)
+            // Хвост ближе к телу
             const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.25) * 12;
             ctx.fillStyle = COLORS.cat2;
-            ctx.fillRect(x - 20, y + 35 + tailWag, 25, 10);  // Было x - 35
-            ctx.fillRect(x - 30, y + 30 + tailWag, 15, 10);  // Было x - 45
+            ctx.fillRect(x - 20, y + 35 + tailWag, 25, 10);
+            ctx.fillRect(x - 30, y + 30 + tailWag, 15, 10);
             ctx.fillStyle = COLORS.cat3;
             ctx.fillRect(x - 20, y + 37 + tailWag, 25, 6);
             ctx.fillRect(x - 30, y + 32 + tailWag, 15, 6);
@@ -367,11 +367,7 @@
             ctx.fillRect(x + 82, y + 34, 12, 2);
             ctx.fillRect(x + 82, y + 38, 12, 2);
 
-            // ❌ ОШЕЙНИК УБРАН (был здесь)
-            // ctx.fillStyle = '#FF0000';
-            // ctx.fillRect(x + 52, y + 42, 28, 5);
-            // ctx.fillStyle = '#FFD000';
-            // ctx.fillRect(x + 64, y + 43, 6, 6);
+            // Ошейник убран
 
             ctx.restore();
         }
@@ -381,7 +377,7 @@
                 this.width = 45 + Math.random() * 35;
                 this.height = 30 + Math.random() * 25;
                 this.x = x || canvas.width;
-                this.y = canvas.height - 60 - this.height;
+                this.y = canvas.height - groundHeight - this.height;
                 this.markedForDeletion = false;
             }
             update() {
@@ -416,7 +412,7 @@
                 this.width = 70 + Math.random() * 50;
                 this.depth = 55 + Math.random() * 35;
                 this.x = x || canvas.width;
-                this.y = canvas.height - 60;
+                this.y = canvas.height - groundHeight;
                 this.markedForDeletion = false;
             }
             update() {
@@ -452,13 +448,14 @@
             }
         }
 
+        // ✅ ИСПРАВЛЕННЫЙ ФОН (заполняет до земли, а не 60%)
         function drawBackground() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height - groundHeight);
             gradient.addColorStop(0, COLORS.sky1);
             gradient.addColorStop(0.5, COLORS.sky2);
             gradient.addColorStop(1, COLORS.sky3);
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
+            ctx.fillRect(0, 0, canvas.width, canvas.height - groundHeight);
         }
 
         function updateBackground() {
@@ -506,8 +503,6 @@
             }
             updateDoubleJumpIndicator();
         }
-
-        const groundHeight = 60;
 
         function handleObstacles() {
             if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - MIN_GAP) {
