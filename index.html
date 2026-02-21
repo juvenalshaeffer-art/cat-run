@@ -3,83 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Котик бежит</title>
+    <title>Котик бежит - Dendy Style</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
         body {
             display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; background: linear-gradient(to bottom, #87CEEB 0%, #90EE90 100%);
-            font-family: Arial, sans-serif; overflow: hidden; width: 100vw; height: 100vh;
+            min-height: 100vh; background: #000;
+            font-family: 'Courier New', monospace; overflow: hidden; width: 100vw; height: 100vh;
         }
         #gameContainer { position: relative; width: 100%; height: 100%; }
-        #gameCanvas { display: block; width: 100%; height: 100%; }
+        #gameCanvas { 
+            display: block; width: 100%; height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
         #score {
             position: absolute; top: 10px; left: 10px; font-size: 20px;
-            font-weight: bold; color: #333; background: rgba(255,255,255,0.9);
-            padding: 8px 15px; border-radius: 10px; z-index: 10;
+            font-weight: bold; color: #fff; background: rgba(0,0,0,0.8);
+            padding: 8px 15px; border-radius: 0; border: 2px solid #fff; z-index: 10;
+            font-family: 'Courier New', monospace;
         }
         #doubleJumpIndicator {
             position: absolute; top: 10px; right: 10px; font-size: 14px;
-            background: rgba(255,255,255,0.9); padding: 8px 15px;
-            border-radius: 10px; z-index: 10;
+            background: rgba(0,0,0,0.8); padding: 8px 15px;
+            border-radius: 0; border: 2px solid #fff; z-index: 10;
+            color: #0f0; font-family: 'Courier New', monospace;
         }
-        #doubleJumpIndicator.ready { color: #4CAF50; font-weight: bold; }
-        #doubleJumpIndicator.used { color: #999; }
         #startScreen, #gameOver {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px;
-            text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 20;
+            background: rgba(0,0,0,0.9); padding: 30px; border-radius: 0;
+            text-align: center; border: 4px solid #fff; z-index: 20;
         }
         #gameOver { display: none; }
-        h2 { margin: 0 0 15px 0; color: #333; }
-        p { margin: 10px 0; color: #666; }
+        h2 { margin: 0 0 15px 0; color: #ff0; font-size: 24px; font-family: 'Courier New', monospace; }
+        p { margin: 10px 0; color: #fff; font-family: 'Courier New', monospace; }
         button {
             margin-top: 15px; padding: 15px 40px; font-size: 18px;
-            background: #4CAF50; color: white; border: none;
-            border-radius: 5px; cursor: pointer;
+            background: #0f0; color: #000; border: 4px solid #fff;
+            cursor: pointer; font-family: 'Courier New', monospace;
         }
-        button:active { background: #45a049; transform: scale(0.95); }
+        button:active { background: #0a0; }
+        
+        /* Scanline effect */
+        #scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.1) 0px,
+                rgba(0,0,0,0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
-        <div id="score">Счёт: 0</div>
-        <div id="doubleJumpIndicator">Двойной прыжок: ✅ Готов</div>
+        <div id="scanlines"></div>
+        <div id="score">СЧЁТ: 0</div>
+        <div id="doubleJumpIndicator">2X ПРЫЖОК: ГОТОВ</div>
         
         <div id="startScreen">
-            <h2>🐱 Котик бежит!</h2>
-            <p>Перепрыгивай через камни</p>
-            <p>⚠️ Остерегайся ям!</p>
-            <p style="font-size: 14px;">Пробел или клик для прыжка</p>
-            <p style="font-size: 13px; color: #4CAF50;">🦘 В воздухе можно прыгнуть ещё раз!</p>
-            <button id="startBtn">▶️ Начать игру</button>
+            <h2>🐱 КОТИК БЕЖИТ</h2>
+            <p>ПРЫГАЙ ЧЕРЕЗ КАМНИ</p>
+            <p>⚠️ БОЙСЯ ЯМ!</p>
+            <p style="font-size: 14px; color: #0f0;">ПРОБЕЛ или КЛИК для прыжка</p>
+            <p style="font-size: 13px; color: #ff0;">🦘 В воздухе можно ещё раз!</p>
+            <button id="startBtn">▶ НАЧАТЬ</button>
         </div>
         
         <div id="gameOver">
-            <h2>💀 Игра окончена!</h2>
-            <p>Ваш счёт: <span id="finalScore">0</span></p>
-            <button id="restartBtn">🔄 Играть снова</button>
+            <h2>💀 ИГРА ОКОНЧЕНА</h2>
+            <p>СЧЁТ: <span id="finalScore">0</span></p>
+            <button id="restartBtn">↻ ЗАНОВО</button>
         </div>
     </div>
 
-    <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         try {
             const tg = window.Telegram?.WebApp;
             if (tg) {
-                tg.expand();
-                tg.ready();
-                tg.BackButton.show();
+                tg.expand(); tg.ready(); tg.BackButton.show();
                 tg.BackButton.onClick(() => {
                     window.location.href = 'https://juvenalshaeffer-art.github.io/tamagotchi/';
                 });
             }
-        } catch(e) { console.log('Telegram WebApp не доступен'); }
-    </script>
+        } catch(e) {}
 
-    <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
@@ -97,7 +111,8 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // 🎯 ПАРАМЕТРЫ ПРЫЖКА
+        // 🎮 DENDY ПАРАМЕТРЫ
+        const PIXEL_SIZE = 4; // Размер одного "пикселя"
         const JUMP_VELOCITY = -15;
         const DOUBLE_JUMP_VELOCITY = -12;
         const GRAVITY = 0.8;
@@ -106,9 +121,27 @@
         const CAT_HEIGHT = 70;
         
         const SINGLE_JUMP_DISTANCE = Math.abs((2 * JUMP_VELOCITY / GRAVITY) * BASE_SPEED);
-        const DOUBLE_JUMP_BONUS = SINGLE_JUMP_DISTANCE * 0.5;
-        const MAX_JUMP_DISTANCE = SINGLE_JUMP_DISTANCE + DOUBLE_JUMP_BONUS;
+        const MAX_JUMP_DISTANCE = SINGLE_JUMP_DISTANCE * 1.5;
         const MIN_GAP = (MAX_JUMP_DISTANCE * 1.5) + CAT_WIDTH;
+
+        // 🎨 DENDY ПАЛИТРА
+        const COLORS = {
+            sky: '#5C94FC',      // Небо NES
+            ground: '#C84C0C',   // Земля
+            grass: '#00A800',    // Трава
+            cat: '#A0A0A0',      // Кот серый
+            catDark: '#606060',  // Кот тёмный
+            catLight: '#D0D0D0', // Кот светлый
+            catEye: '#F8B800',   // Глаза
+            rock: '#808080',     // Камень
+            rockDark: '#505050', // Камень тёмный
+            pit: '#583820',      // Яма
+            tree: '#00A800',     // Дерево
+            trunk: '#804000',    // Ствол
+            cloud: '#FFFFFF',    // Облако
+            white: '#FFFFFF',
+            black: '#000000'
+        };
 
         let gameRunning = false;
         let score = 0;
@@ -118,326 +151,239 @@
         const cat = {
             x: 80, y: 0, width: CAT_WIDTH, height: CAT_HEIGHT,
             velocityY: 0, jumping: false, groundY: 0,
-            inPit: false, canDoubleJump: false, hasDoubleJumped: false
+            inPit: false, canDoubleJump: false, hasDoubleJumped: false,
+            animFrame: 0
         };
 
         let obstacles = [];
         let pits = [];
-        let lastObstacleEndX = 0;
-        let lastPitEndX = 0;
-
-        // 🌳 ФОНОВЫЕ ЭЛЕМЕНТЫ (деревья и кусты)
         let backgroundElements = [];
 
         function updateDoubleJumpIndicator() {
             if (cat.canDoubleJump && !cat.hasDoubleJumped) {
-                doubleJumpIndicator.textContent = 'Двойной прыжок: ✅ Готов';
-                doubleJumpIndicator.className = 'ready';
+                doubleJumpIndicator.textContent = '2X ПРЫЖОК: ГОТОВ';
+                doubleJumpIndicator.style.color = '#0f0';
             } else {
-                doubleJumpIndicator.textContent = 'Двойной прыжок: ❌ Использован';
-                doubleJumpIndicator.className = 'used';
+                doubleJumpIndicator.textContent = '2X ПРЫЖОК: НЕТ';
+                doubleJumpIndicator.style.color = '#666';
             }
         }
 
-        // 🌲 Класс дерева
-        class Tree {
-            constructor(x) {
-                this.x = x || canvas.width + Math.random() * 200;
-                this.height = 80 + Math.random() * 120;
-                this.trunkWidth = 15 + Math.random() * 10;
-                this.crownRadius = 30 + Math.random() * 40;
-                this.speed = speed * 0.3; // Деревья движутся медленнее (параллакс)
-                this.variation = Math.floor(Math.random() * 3); // 3 варианта формы
-            }
+        // 🐱 РИСУЕМ КОТИКА В ПИКСЕЛЬНОМ СТИЛЕ
+        function drawPixelCat() {
+            const x = Math.floor(cat.x);
+            const y = Math.floor(cat.y);
+            const p = PIXEL_SIZE; // pixel size
 
-            update() {
-                this.x -= this.speed;
-            }
-
-            draw() {
-                // Ствол
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(
-                    this.x - this.trunkWidth / 2,
-                    canvas.height - groundHeight - this.height,
-                    this.trunkWidth,
-                    this.height
-                );
-
-                // Крона (3 варианта)
-                ctx.fillStyle = '#228B22';
-                const crownY = canvas.height - groundHeight - this.height;
-                
-                if (this.variation === 0) {
-                    // Круглая крона
-                    ctx.beginPath();
-                    ctx.arc(this.x, crownY, this.crownRadius, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (this.variation === 1) {
-                    // Треугольная крона (ёлка)
-                    ctx.beginPath();
-                    ctx.moveTo(this.x, crownY - this.crownRadius * 1.5);
-                    ctx.lineTo(this.x - this.crownRadius, crownY + this.crownRadius * 0.5);
-                    ctx.lineTo(this.x + this.crownRadius, crownY + this.crownRadius * 0.5);
-                    ctx.closePath();
-                    ctx.fill();
-                } else {
-                    // Облачная крона
-                    ctx.beginPath();
-                    ctx.arc(this.x - this.crownRadius * 0.5, crownY + 10, this.crownRadius * 0.7, 0, Math.PI * 2);
-                    ctx.arc(this.x + this.crownRadius * 0.5, crownY + 10, this.crownRadius * 0.7, 0, Math.PI * 2);
-                    ctx.arc(this.x, crownY - this.crownRadius * 0.3, this.crownRadius * 0.8, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                // Тень на кроне
-                ctx.fillStyle = '#1a6b1a';
-                ctx.beginPath();
-                ctx.arc(this.x - this.crownRadius * 0.3, crownY - this.crownRadius * 0.2, this.crownRadius * 0.3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // 🌿 Класс куста
-        class Bush {
-            constructor(x) {
-                this.x = x || canvas.width + Math.random() * 200;
-                this.width = 40 + Math.random() * 40;
-                this.height = 25 + Math.random() * 25;
-                this.speed = speed * 0.5; // Кусты движутся чуть быстрее деревьев
-                this.leaves = 3 + Math.floor(Math.random() * 3); // Количество "пузырей"
-            }
-
-            update() {
-                this.x -= this.speed;
-            }
-
-            draw() {
-                const bushY = canvas.height - groundHeight - this.height + 10;
-                
-                ctx.fillStyle = '#32CD32';
-                for (let i = 0; i < this.leaves; i++) {
-                    const leafX = this.x - this.width / 2 + (i * this.width / this.leaves);
-                    const leafRadius = this.width / this.leaves / 2;
-                    ctx.beginPath();
-                    ctx.arc(leafX, bushY, leafRadius, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                // Тень
-                ctx.fillStyle = '#228B22';
-                ctx.beginPath();
-                ctx.arc(this.x - this.width * 0.2, bushY - this.height * 0.2, this.width * 0.2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // 🌤️ Класс облака
-        class Cloud {
-            constructor(x) {
-                this.x = x || canvas.width + Math.random() * 300;
-                this.y = 50 + Math.random() * 150;
-                this.width = 80 + Math.random() * 60;
-                this.speed = speed * 0.15; // Облака движутся очень медленно
-            }
-
-            update() {
-                this.x -= this.speed;
-            }
-
-            draw() {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.width * 0.3, 0, Math.PI * 2);
-                ctx.arc(this.x + this.width * 0.25, this.y - 10, this.width * 0.35, 0, Math.PI * 2);
-                ctx.arc(this.x + this.width * 0.5, this.y, this.width * 0.3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // 🎨 Инициализация фона
-        function initBackground() {
-            backgroundElements = [];
-            // Деревья
-            for (let i = 0; i < 5; i++) {
-                backgroundElements.push(new Tree(i * 200));
-            }
-            // Кусты
-            for (let i = 0; i < 8; i++) {
-                backgroundElements.push(new Bush(i * 120));
-            }
-            // Облака
-            for (let i = 0; i < 4; i++) {
-                backgroundElements.push(new Cloud(i * 250));
-            }
-        }
-
-        // 🎨 Отрисовка фона
-        function drawBackground() {
-            // Градиент неба
-            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            skyGradient.addColorStop(0, '#87CEEB');
-            skyGradient.addColorStop(0.5, '#B0E0E6');
-            skyGradient.addColorStop(1, '#90EE90');
-            ctx.fillStyle = skyGradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Дальние холмы
-            ctx.fillStyle = '#90EE90';
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - groundHeight);
-            for (let i = 0; i <= canvas.width; i += 100) {
-                ctx.lineTo(i, canvas.height - groundHeight - 30 - Math.sin(i * 0.01 + frame * 0.001) * 20);
-            }
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.lineTo(0, canvas.height);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // 🔄 Обновление фона
-        function updateBackground() {
-            backgroundElements.forEach((element, index) => {
-                element.update();
-                element.draw();
-
-                // Удаляем ушедшие за экран и добавляем новые
-                if (element.x < -150) {
-                    backgroundElements.splice(index, 1);
-                    
-                    if (element instanceof Tree) {
-                        backgroundElements.push(new Tree());
-                    } else if (element instanceof Bush) {
-                        backgroundElements.push(new Bush());
-                    } else if (element instanceof Cloud) {
-                        backgroundElements.push(new Cloud());
-                    }
-                }
-            });
-
-            // Сортировка по Y для правильного наложения
-            backgroundElements.sort((a, b) => {
-                const aY = a.y || (canvas.height - groundHeight - a.height);
-                const bY = b.y || (canvas.height - groundHeight - b.height);
-                return aY - bY;
-            });
-        }
-
-        function drawCat() {
             ctx.save();
-            ctx.translate(cat.x, cat.y);
-
+            
+            // Тень
             if (!cat.inPit) {
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.beginPath();
-                ctx.ellipse(35, 68, 30, 6, 0, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(x + 10, y + CAT_HEIGHT - 5, CAT_WIDTH - 20, 8);
             }
 
-            ctx.strokeStyle = '#808080';
-            ctx.lineWidth = 8;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(10, 35);
-            const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.2) * 5;
-            ctx.quadraticCurveTo(-5, 25 + tailWag, -10, 15 + tailWag);
-            ctx.stroke();
+            // Хвост (анимация)
+            ctx.fillStyle = COLORS.cat;
+            const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.3) * 8;
+            ctx.fillRect(x - 20, y + 20 + tailWag, 20, 8);
+            ctx.fillRect(x - 28, y + 15 + tailWag, 12, 8);
 
-            const legOffset = cat.jumping || cat.inPit ? 0 : Math.sin(frame * 0.3) * 8;
+            // Тело
+            ctx.fillStyle = COLORS.cat;
+            ctx.fillRect(x + 10, y + 25, 45, 25);
+            
+            // Полоски на теле
+            ctx.fillStyle = COLORS.catDark;
+            ctx.fillRect(x + 20, y + 28, 6, 20);
+            ctx.fillRect(x + 32, y + 28, 6, 20);
 
-            ctx.fillStyle = '#909090';
-            ctx.beginPath();
-            ctx.ellipse(20 + legOffset, 62, 6, 10, 0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(30 - legOffset, 62, 6, 10, -0.2, 0, Math.PI * 2);
-            ctx.fill();
+            // Голова
+            ctx.fillStyle = COLORS.cat;
+            ctx.fillRect(x + 45, y + 15, 25, 22);
 
-            ctx.fillStyle = '#A0A0A0';
-            ctx.beginPath();
-            ctx.ellipse(35, 40, 32, 20, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.ellipse(52 + legOffset, 62, 6, 10, -0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(60 - legOffset, 62, 6, 10, 0.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(62, 30, 18, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.moveTo(48, 20);
-            ctx.lineTo(50, 5);
-            ctx.lineTo(56, 16);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(68, 16);
-            ctx.lineTo(74, 5);
-            ctx.lineTo(76, 20);
-            ctx.fill();
-
+            // Уши
+            ctx.fillStyle = COLORS.cat;
+            ctx.fillRect(x + 48, y + 8, 6, 10);
+            ctx.fillRect(x + 62, y + 8, 6, 10);
             ctx.fillStyle = '#FFB6C1';
-            ctx.beginPath();
-            ctx.moveTo(50, 17);
-            ctx.lineTo(51, 8);
-            ctx.lineTo(54, 15);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(70, 15);
-            ctx.lineTo(73, 8);
-            ctx.lineTo(74, 17);
-            ctx.fill();
+            ctx.fillRect(x + 50, y + 10, 4, 6);
+            ctx.fillRect(x + 64, y + 10, 4, 6);
 
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(58, 28, 6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(72, 28, 6, 0, Math.PI * 2);
-            ctx.fill();
+            // Глаза
+            ctx.fillStyle = COLORS.white;
+            ctx.fillRect(x + 52, y + 18, 8, 8);
+            ctx.fillRect(x + 64, y + 18, 8, 8);
+            ctx.fillStyle = COLORS.catEye;
+            ctx.fillRect(x + 54, y + 20, 4, 4);
+            ctx.fillRect(x + 66, y + 20, 4, 4);
+            ctx.fillStyle = COLORS.black;
+            ctx.fillRect(x + 55, y + 21, 2, 2);
+            ctx.fillRect(x + 67, y + 21, 2, 2);
 
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(59, 28, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(73, 28, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = 'black';
-            ctx.beginPath();
-            ctx.arc(59, 28, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(73, 28, 2, 0, Math.PI * 2);
-            ctx.fill();
-
+            // Нос
             ctx.fillStyle = '#FFB6C1';
-            ctx.beginPath();
-            ctx.arc(65, 35, 3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(x + 68, y + 26, 4, 4);
 
-            ctx.strokeStyle = '#606060';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(52, 32);
-            ctx.lineTo(40, 30);
-            ctx.moveTo(52, 35);
-            ctx.lineTo(40, 35);
-            ctx.moveTo(52, 38);
-            ctx.lineTo(40, 40);
-            ctx.stroke();
+            // Усы
+            ctx.fillStyle = COLORS.white;
+            ctx.fillRect(x + 42, y + 24, 10, 2);
+            ctx.fillRect(x + 42, y + 28, 10, 2);
+
+            // Лапы (анимация бега)
+            const legOffset = cat.jumping || cat.inPit ? 0 : Math.sin(frame * 0.4) * 10;
+            ctx.fillStyle = COLORS.cat;
+            
+            // Задние
+            ctx.fillRect(x + 15 + legOffset, y + 48, 8, 12);
+            ctx.fillRect(x + 30 - legOffset, y + 48, 8, 12);
+            
+            // Передние
+            ctx.fillRect(x + 48 + legOffset, y + 48, 8, 12);
+            ctx.fillRect(x + 60 - legOffset, y + 48, 8, 12);
 
             ctx.restore();
         }
 
+        // 🌲 ДЕРЕВО В ПИКСЕЛЬНОМ СТИЛЕ
+        class PixelTree {
+            constructor(x) {
+                this.x = x || canvas.width + Math.random() * 200;
+                this.height = 60 + Math.random() * 80;
+                this.speed = speed * 0.3;
+                this.variation = Math.floor(Math.random() * 2);
+            }
+            update() { this.x -= this.speed; }
+            draw() {
+                const p = PIXEL_SIZE;
+                const groundY = canvas.height - 60;
+                
+                // Ствол
+                ctx.fillStyle = COLORS.trunk;
+                ctx.fillRect(this.x - 6, groundY - this.height, 12, this.height);
+                
+                // Крона
+                ctx.fillStyle = COLORS.tree;
+                if (this.variation === 0) {
+                    // Круглая
+                    ctx.fillRect(this.x - 25, groundY - this.height - 35, 50, 40);
+                    ctx.fillRect(this.x - 20, groundY - this.height - 45, 40, 15);
+                } else {
+                    // Треугольная (ёлка)
+                    ctx.fillRect(this.x - 30, groundY - this.height - 20, 60, 25);
+                    ctx.fillRect(this.x - 25, groundY - this.height - 40, 50, 25);
+                    ctx.fillRect(this.x - 20, groundY - this.height - 55, 40, 20);
+                }
+            }
+        }
+
+        // ☁️ ОБЛАКО В ПИКСЕЛЬНОМ СТИЛЕ
+        class PixelCloud {
+            constructor(x) {
+                this.x = x || canvas.width + Math.random() * 300;
+                this.y = 40 + Math.random() * 100;
+                this.width = 60 + Math.random() * 50;
+                this.speed = speed * 0.15;
+            }
+            update() { this.x -= this.speed; }
+            draw() {
+                ctx.fillStyle = COLORS.cloud;
+                ctx.fillRect(this.x, this.y, this.width, 20);
+                ctx.fillRect(this.x + 15, this.y - 12, this.width - 30, 15);
+            }
+        }
+
+        // 🪨 КАМЕНЬ В ПИКСЕЛЬНОМ СТИЛЕ
+        class PixelRock {
+            constructor(x) {
+                this.width = 40 + Math.random() * 30;
+                this.height = 25 + Math.random() * 20;
+                this.x = x || canvas.width;
+                this.y = canvas.height - 60 - this.height;
+                this.markedForDeletion = false;
+            }
+            update() {
+                this.x -= speed;
+                if (this.x + this.width < 0) {
+                    this.markedForDeletion = true;
+                    score++;
+                    scoreElement.textContent = 'СЧЁТ: ' + score;
+                    if (score % 5 === 0) speed += 0.5;
+                }
+            }
+            draw() {
+                ctx.fillStyle = COLORS.rock;
+                // Полукруглая форма из пикселей
+                const steps = 8;
+                for (let i = 0; i < steps; i++) {
+                    const y = this.y + this.height - (i * this.height / steps);
+                    const width = this.width * Math.sin((i / steps) * Math.PI);
+                    ctx.fillRect(this.x + (this.width - width) / 2, y, width, this.height / steps);
+                }
+                
+                // Блик
+                ctx.fillStyle = COLORS.rockDark;
+                ctx.fillRect(this.x + 8, this.y + 8, this.width - 16, 6);
+            }
+        }
+
+        // 🕳️ ЯМА В ПИКСЕЛЬНОМ СТИЛЕ
+        class PixelPit {
+            constructor(x) {
+                this.width = 60 + Math.random() * 40;
+                this.depth = 50 + Math.random() * 30;
+                this.x = x || canvas.width;
+                this.y = canvas.height - 60;
+                this.markedForDeletion = false;
+            }
+            update() {
+                this.x -= speed;
+                if (this.x + this.width < 0) this.markedForDeletion = true;
+            }
+            draw() {
+                ctx.fillStyle = COLORS.pit;
+                ctx.fillRect(this.x, this.y, this.width, this.depth);
+                
+                // Тень внутри
+                ctx.fillStyle = '#382818';
+                ctx.fillRect(this.x + 10, this.y + 10, this.width - 20, this.depth - 15);
+            }
+        }
+
+        function initBackground() {
+            backgroundElements = [];
+            for (let i = 0; i < 6; i++) backgroundElements.push(new PixelTree(i * 180));
+            for (let i = 0; i < 5; i++) backgroundElements.push(new PixelCloud(i * 220));
+        }
+
+        function drawBackground() {
+            // Небо градиент
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, COLORS.sky);
+            gradient.addColorStop(0.6, '#88C8F8');
+            gradient.addColorStop(1, COLORS.ground);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Дальние холмы (пиксельные)
+            ctx.fillStyle = '#78B850';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 40);
+        }
+
+        function updateBackground() {
+            backgroundElements.forEach((el, i) => {
+                el.speed = speed * (el instanceof PixelTree ? 0.3 : 0.15);
+                el.update();
+                el.draw();
+                if (el.x < -100) {
+                    backgroundElements.splice(i, 1);
+                    backgroundElements.push(el instanceof PixelTree ? new PixelTree() : new PixelCloud());
+                }
+            });
+        }
+
         function jump() {
             if (!gameRunning || cat.inPit) return;
-            
             if (!cat.jumping) {
                 cat.velocityY = JUMP_VELOCITY;
                 cat.jumping = true;
@@ -448,7 +394,6 @@
                 cat.hasDoubleJumped = true;
                 cat.canDoubleJump = false;
             }
-            
             updateDoubleJumpIndicator();
         }
 
@@ -456,15 +401,11 @@
             if (cat.inPit) {
                 cat.velocityY += 1.2;
                 cat.y += cat.velocityY;
-                if (cat.y >= cat.groundY + 50) {
-                    gameOver();
-                }
+                if (cat.y >= cat.groundY + 50) gameOver();
                 return;
             }
-
             cat.velocityY += GRAVITY;
             cat.y += cat.velocityY;
-
             if (cat.y >= cat.groundY) {
                 cat.y = cat.groundY;
                 cat.jumping = false;
@@ -472,179 +413,65 @@
                 cat.canDoubleJump = false;
                 cat.hasDoubleJumped = false;
             }
-            
             updateDoubleJumpIndicator();
-        }
-
-        class Obstacle {
-            constructor() {
-                this.width = 40 + Math.random() * 30;
-                this.height = 25 + Math.random() * 20;
-                this.x = canvas.width;
-                this.y = canvas.height - groundHeight - this.height;
-                this.markedForDeletion = false;
-            }
-            update() {
-                this.x -= speed;
-                if (this.x + this.width < 0) {
-                    this.markedForDeletion = true;
-                    score++;
-                    scoreElement.textContent = 'Счёт: ' + score;
-                    if (score % 5 === 0) speed += 0.5;
-                }
-            }
-            draw() {
-                ctx.fillStyle = '#696969';
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y + this.height);
-                ctx.lineTo(this.x + this.width, this.y + this.height);
-                ctx.arc(this.x + this.width / 2, this.y + this.height, this.width / 2, Math.PI, 0, false);
-                ctx.fill();
-                
-                ctx.fillStyle = '#808080';
-                ctx.beginPath();
-                ctx.arc(this.x + this.width / 2 - 5, this.y + this.height - this.height / 2, this.width / 6, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        class Pit {
-            constructor() {
-                this.width = 60 + Math.random() * 40;
-                this.depth = 50 + Math.random() * 30;
-                this.x = canvas.width;
-                this.y = canvas.height - groundHeight;
-                this.markedForDeletion = false;
-            }
-            update() {
-                this.x -= speed;
-                if (this.x + this.width < 0) {
-                    this.markedForDeletion = true;
-                }
-            }
-            draw() {
-                ctx.fillStyle = '#5D4037';
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.quadraticCurveTo(this.x + 10, this.y + this.depth / 2, this.x + 15, this.y + this.depth);
-                ctx.lineTo(this.x + this.width - 15, this.y + this.depth);
-                ctx.quadraticCurveTo(this.x + this.width - 10, this.y + this.depth / 2, this.x + this.width, this.y);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.fillStyle = '#3E2723';
-                ctx.beginPath();
-                ctx.moveTo(this.x + 10, this.y + 5);
-                ctx.quadraticCurveTo(this.x + 15, this.y + this.depth - 10, this.x + 30, this.y + this.depth - 5);
-                ctx.lineTo(this.x + this.width - 30, this.y + this.depth - 5);
-                ctx.quadraticCurveTo(this.x + this.width - 15, this.y + this.depth - 10, this.x + this.width - 10, this.y + 5);
-                ctx.closePath();
-                ctx.fill();
-            }
-        }
-
-        function canSpawnObstacle(x, width) {
-            const obstacleEnd = x - width;
-            if (obstacleEnd < lastObstacleEndX + MIN_GAP) return false;
-            if (obstacleEnd < lastPitEndX + MIN_GAP) return false;
-            for (let obs of obstacles) {
-                if (Math.abs(x - obs.x) < MIN_GAP) return false;
-            }
-            for (let pit of pits) {
-                if (Math.abs(x - (pit.x + pit.width)) < MIN_GAP) return false;
-            }
-            return true;
-        }
-
-        function canSpawnPit(x, width) {
-            const pitEnd = x - width;
-            if (pitEnd < lastObstacleEndX + MIN_GAP) return false;
-            if (pitEnd < lastPitEndX + MIN_GAP) return false;
-            for (let obs of obstacles) {
-                if (Math.abs(x - (obs.x + obs.width)) < MIN_GAP) return false;
-            }
-            for (let pit of pits) {
-                if (Math.abs(x - pit.x) < MIN_GAP) return false;
-            }
-            return true;
         }
 
         const groundHeight = 60;
 
         function handleObstacles() {
-            if (Math.random() < 0.015) {
-                const width = 40 + Math.random() * 30;
-                if (canSpawnObstacle(canvas.width, width)) {
-                    obstacles.push(new Obstacle());
-                    lastObstacleEndX = canvas.width;
+            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - MIN_GAP) {
+                if (Math.random() < 0.03) {
+                    obstacles.push(new PixelRock(canvas.width + Math.random() * 100));
+                }
+            }
+            if (pits.length === 0 || pits[pits.length - 1].x < canvas.width - MIN_GAP * 1.5) {
+                if (Math.random() < 0.015) {
+                    pits.push(new PixelPit(canvas.width + Math.random() * 100));
                 }
             }
 
-            if (Math.random() < 0.008) {
-                const width = 60 + Math.random() * 40;
-                if (canSpawnPit(canvas.width, width)) {
-                    pits.push(new Pit());
-                    lastPitEndX = canvas.width;
-                }
-            }
-
-            obstacles.forEach((obs, index) => {
+            obstacles.forEach((obs, i) => {
                 obs.update();
                 obs.draw();
-
-                const catBottom = cat.y + cat.height;
-                const catRight = cat.x + cat.width;
-                const catLeft = cat.x;
-                const obsTop = obs.y;
-                const obsLeft = obs.x;
-                const obsRight = obs.x + obs.width;
-
-                const isColliding = catLeft < obsRight && catRight > obsLeft &&
-                                    catBottom > obsTop && cat.y < obs.y + obs.height;
-
-                if (isColliding) {
-                    const isLandingOnTop = cat.velocityY > 0 &&
-                                          catBottom - obsTop < 20 &&
-                                          cat.y + cat.height / 2 < obsTop;
-
-                    if (isLandingOnTop) {
+                const hit = cat.x < obs.x + obs.width && cat.x + cat.width > obs.x &&
+                           cat.y + cat.height > obs.y && cat.y < obs.y + obs.height;
+                if (hit) {
+                    if (cat.velocityY > 0 && cat.y + cat.height - obs.y < 20) {
                         obs.markedForDeletion = true;
                         cat.velocityY = -5;
                         score++;
-                        scoreElement.textContent = 'Счёт: ' + score;
+                        scoreElement.textContent = 'СЧЁТ: ' + score;
                         if (score % 5 === 0) speed += 0.5;
                     } else {
                         gameOver();
                     }
                 }
-
-                if (obs.markedForDeletion) {
-                    obstacles.splice(index, 1);
-                }
+                if (obs.markedForDeletion) obstacles.splice(i, 1);
             });
 
-            pits.forEach((pit, index) => {
+            pits.forEach((pit, i) => {
                 pit.update();
                 pit.draw();
-
-                const catCenterX = cat.x + cat.width / 2;
-                const catOnGround = cat.y >= cat.groundY - 5 && !cat.jumping;
-                
-                if (catOnGround && catCenterX > pit.x + 10 && catCenterX < pit.x + pit.width - 10) {
+                const cx = cat.x + cat.width / 2;
+                if (cat.y >= cat.groundY - 5 && !cat.jumping &&
+                    cx > pit.x + 10 && cx < pit.x + pit.width - 10) {
                     cat.inPit = true;
                 }
-
-                if (pit.markedForDeletion) {
-                    pits.splice(index, 1);
-                }
+                if (pit.markedForDeletion) pits.splice(i, 1);
             });
         }
 
         function drawGround() {
-            ctx.fillStyle = '#8B4513';
+            ctx.fillStyle = COLORS.ground;
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
-            ctx.fillStyle = '#228B22';
-            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 10);
+            ctx.fillStyle = COLORS.grass;
+            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 12);
+            
+            // Пиксельная трава
+            ctx.fillStyle = '#00D800';
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.fillRect(i, canvas.height - groundHeight - 4, 8, 4);
+            }
         }
 
         function gameOver() {
@@ -654,20 +481,12 @@
         }
 
         function startGame() {
-            score = 0;
-            speed = BASE_SPEED;
-            frame = 0;
-            obstacles = [];
-            pits = [];
-            lastObstacleEndX = 0;
-            lastPitEndX = 0;
-            cat.y = cat.groundY;
-            cat.velocityY = 0;
-            cat.jumping = false;
-            cat.inPit = false;
-            cat.canDoubleJump = false;
-            cat.hasDoubleJumped = false;
-            scoreElement.textContent = 'Счёт: 0';
+            score = 0; speed = BASE_SPEED; frame = 0;
+            obstacles = []; pits = [];
+            cat.y = cat.groundY; cat.velocityY = 0;
+            cat.jumping = false; cat.inPit = false;
+            cat.canDoubleJump = false; cat.hasDoubleJumped = false;
+            scoreElement.textContent = 'СЧЁТ: 0';
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'none';
             gameRunning = true;
@@ -679,37 +498,25 @@
         function animate() {
             if (!gameRunning) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             cat.groundY = canvas.height - groundHeight - cat.height;
-            
-            // 🎨 Рисуем фон
             drawBackground();
             updateBackground();
-            
-            // 🎮 Игровые объекты
             drawGround();
             updateCat();
-            drawCat();
+            drawPixelCat();
             handleObstacles();
-
             frame++;
             requestAnimationFrame(animate);
         }
 
         startBtn.addEventListener('click', startGame);
         restartBtn.addEventListener('click', startGame);
-
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (gameRunning) jump();
-            }
+            if (e.code === 'Space') { e.preventDefault(); if (gameRunning) jump(); }
         });
-
         canvas.addEventListener('click', () => { if (gameRunning) jump(); });
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (gameRunning) jump();
+            e.preventDefault(); if (gameRunning) jump();
         }, { passive: false });
     </script>
 </body>
