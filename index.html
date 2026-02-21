@@ -179,9 +179,7 @@
             pit1: '#604020', pit2: '#403018', pit3: '#201810',
             tree1: '#008000', tree2: '#00A000', tree3: '#00C000',
             trunk1: '#603000', trunk2: '#804000',
-            cloud1: '#FFFFFF', cloud2: '#E0E0E0', cloud3: '#C0C0C0',
-            mountain1: '#406080', mountain2: '#6080A0', mountain3: '#80A0C0',
-            ui1: '#00FFFF', ui2: '#0080FF', ui3: '#FFFF00', ui4: '#00FF00', ui5: '#FF0000'
+            cloud1: '#FFFFFF', cloud2: '#E0E0E0', cloud3: '#C0C0C0'
         };
 
         let gameRunning = false;
@@ -192,14 +190,12 @@
         const cat = {
             x: 80, y: 0, width: CAT_WIDTH, height: CAT_HEIGHT,
             velocityY: 0, jumping: false, groundY: 0,
-            inPit: false, canDoubleJump: false, hasDoubleJumped: false,
-            animFrame: 0, direction: 1
+            inPit: false, canDoubleJump: false, hasDoubleJumped: false
         };
 
         let obstacles = [];
         let pits = [];
         let backgroundElements = [];
-        let mountains = [];
 
         function updateDoubleJumpIndicator() {
             if (cat.canDoubleJump && !cat.hasDoubleJumped) {
@@ -208,42 +204,6 @@
             } else {
                 doubleJumpIndicator.textContent = '2X ПРЫЖОК: НЕТ';
                 doubleJumpIndicator.style.background = 'linear-gradient(180deg, #808080 0%, #404040 100%)';
-            }
-        }
-
-        class Mountain {
-            constructor(x) {
-                this.x = x || canvas.width + Math.random() * 300;
-                this.width = 150 + Math.random() * 200;
-                this.height = 100 + Math.random() * 150;
-                this.speed = speed * 0.1;
-                this.peaks = 3 + Math.floor(Math.random() * 3);
-                this.color = Math.random() > 0.5 ? COLORS.mountain1 : COLORS.mountain2;
-            }
-            update() { this.x -= this.speed; }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.moveTo(this.x, canvas.height - 60);
-                for (let i = 0; i <= this.peaks; i++) {
-                    const px = this.x + (i * this.width / this.peaks);
-                    const py = canvas.height - 60 - this.height + Math.sin(i) * 30;
-                    ctx.lineTo(px, py);
-                }
-                ctx.lineTo(this.x + this.width, canvas.height - 60);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.fillStyle = '#FFFFFF';
-                for (let i = 1; i < this.peaks; i++) {
-                    const px = this.x + (i * this.width / this.peaks);
-                    const py = canvas.height - 60 - this.height + Math.sin(i) * 30;
-                    ctx.beginPath();
-                    ctx.moveTo(px - 15, py + 20);
-                    ctx.lineTo(px, py);
-                    ctx.lineTo(px + 15, py + 20);
-                    ctx.fill();
-                }
             }
         }
 
@@ -323,33 +283,27 @@
             }
         }
 
-        // 🐱 КОТИК — ИСПРАВЛЕННЫЙ (без тени, усы с двух сторон)
+        // 🐱 КОТИК — ИСПРАВЛЕННЫЙ (без ошейника, хвост ближе к телу)
         function drawSegaCat() {
             const x = Math.floor(cat.x);
             const y = Math.floor(cat.y);
-            const p = PIXEL_SIZE;
 
             ctx.save();
 
-            // ❌ ТЕНЬ УБРАНА
-
-            // Хвост (анимация)
+            // ✅ ХВОСТ БЛИЖЕ К ТЕЛУ (было x - 35, стало x - 20)
             const tailWag = cat.inPit ? 0 : Math.sin(frame * 0.25) * 12;
-            
             ctx.fillStyle = COLORS.cat2;
-            ctx.fillRect(x - 35, y + 35 + tailWag, 25, 10);
-            ctx.fillRect(x - 45, y + 30 + tailWag, 15, 10);
+            ctx.fillRect(x - 20, y + 35 + tailWag, 25, 10);  // Было x - 35
+            ctx.fillRect(x - 30, y + 30 + tailWag, 15, 10);  // Было x - 45
             ctx.fillStyle = COLORS.cat3;
-            ctx.fillRect(x - 35, y + 37 + tailWag, 25, 6);
-            ctx.fillRect(x - 45, y + 32 + tailWag, 15, 6);
+            ctx.fillRect(x - 20, y + 37 + tailWag, 25, 6);
+            ctx.fillRect(x - 30, y + 32 + tailWag, 15, 6);
 
-            // Лапы (анимация)
+            // Лапы
             const legOffset = cat.jumping || cat.inPit ? 0 : Math.sin(frame * 0.35) * 12;
-            
             ctx.fillStyle = COLORS.cat2;
             ctx.fillRect(x + 18 + legOffset, y + 52, 10, 14);
             ctx.fillRect(x + 35 - legOffset, y + 52, 10, 14);
-            
             ctx.fillStyle = COLORS.catInner;
             ctx.fillRect(x + 18 + legOffset, y + 62, 10, 4);
             ctx.fillRect(x + 35 - legOffset, y + 62, 10, 4);
@@ -359,8 +313,6 @@
             ctx.fillRect(x + 15, y + 30, 50, 28);
             ctx.fillStyle = COLORS.cat2;
             ctx.fillRect(x + 15, y + 45, 50, 13);
-            
-            // Полоски на спине
             ctx.fillStyle = COLORS.cat4;
             ctx.fillRect(x + 22, y + 32, 8, 24);
             ctx.fillRect(x + 38, y + 32, 8, 24);
@@ -392,16 +344,12 @@
             ctx.fillStyle = COLORS.catLight;
             ctx.fillRect(x + 56, y + 22, 12, 12);
             ctx.fillRect(x + 72, y + 22, 12, 12);
-            
             ctx.fillStyle = COLORS.catEye;
             ctx.fillRect(x + 58, y + 24, 8, 8);
             ctx.fillRect(x + 74, y + 24, 8, 8);
-            
             ctx.fillStyle = COLORS.catEyeDark;
             ctx.fillRect(x + 60, y + 26, 4, 4);
             ctx.fillRect(x + 76, y + 26, 4, 4);
-            
-            // Блик в глазах
             ctx.fillStyle = COLORS.catLight;
             ctx.fillRect(x + 61, y + 25, 2, 2);
             ctx.fillRect(x + 77, y + 25, 2, 2);
@@ -410,22 +358,20 @@
             ctx.fillStyle = COLORS.catNose;
             ctx.fillRect(x + 78, y + 32, 6, 5);
 
-            // ✅ УСЫ С ОБЕИХ СТОРОН
+            // Усы (с обеих сторон)
             ctx.fillStyle = COLORS.catLight;
-            // Левая сторона (было)
             ctx.fillRect(x + 48, y + 30, 12, 2);
             ctx.fillRect(x + 48, y + 34, 12, 2);
             ctx.fillRect(x + 48, y + 38, 12, 2);
-            // Правая сторона (добавлено)
             ctx.fillRect(x + 82, y + 30, 12, 2);
             ctx.fillRect(x + 82, y + 34, 12, 2);
             ctx.fillRect(x + 82, y + 38, 12, 2);
 
-            // Ошейник
-            ctx.fillStyle = '#FF0000';
-            ctx.fillRect(x + 52, y + 42, 28, 5);
-            ctx.fillStyle = '#FFD000';
-            ctx.fillRect(x + 64, y + 43, 6, 6);
+            // ❌ ОШЕЙНИК УБРАН (был здесь)
+            // ctx.fillStyle = '#FF0000';
+            // ctx.fillRect(x + 52, y + 42, 28, 5);
+            // ctx.fillStyle = '#FFD000';
+            // ctx.fillRect(x + 64, y + 43, 6, 6);
 
             ctx.restore();
         }
@@ -451,17 +397,13 @@
                 ctx.fillStyle = COLORS.rock1;
                 ctx.fillRect(this.x + 10, this.y, this.width - 20, this.height);
                 ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
-                
                 ctx.fillStyle = COLORS.rock2;
                 ctx.fillRect(this.x + 15, this.y + 5, this.width - 30, this.height - 10);
-                
                 ctx.fillStyle = COLORS.rock3;
                 ctx.fillRect(this.x + 12, this.y + 8, this.width - 35, 8);
                 ctx.fillRect(this.x + 18, this.y + 12, this.width - 40, 6);
-                
                 ctx.fillStyle = COLORS.rockShadow;
                 ctx.fillRect(this.x + 8, this.y + this.height - 8, this.width - 16, 8);
-                
                 ctx.fillStyle = '#505050';
                 ctx.fillRect(this.x + 20, this.y + 15, 2, 12);
                 ctx.fillRect(this.x + 35, this.y + 18, 2, 10);
@@ -484,18 +426,14 @@
             draw() {
                 ctx.fillStyle = COLORS.pit1;
                 ctx.fillRect(this.x, this.y, this.width, this.depth);
-                
                 ctx.fillStyle = COLORS.pit2;
                 ctx.fillRect(this.x + 8, this.y + 8, this.width - 16, this.depth - 15);
-                
                 ctx.fillStyle = COLORS.pit3;
                 ctx.fillRect(this.x + 15, this.y + 20, this.width - 30, this.depth - 30);
-                
                 ctx.fillStyle = COLORS.grass;
                 ctx.fillRect(this.x - 5, this.y - 5, this.width + 10, 8);
                 ctx.fillStyle = COLORS.grassLight;
                 ctx.fillRect(this.x - 3, this.y - 3, this.width + 6, 4);
-                
                 ctx.fillStyle = COLORS.rock2;
                 ctx.fillRect(this.x + 20, this.y + this.depth - 10, 12, 8);
                 ctx.fillRect(this.x + this.width - 35, this.y + this.depth - 12, 15, 10);
@@ -504,11 +442,6 @@
 
         function initBackground() {
             backgroundElements = [];
-            mountains = [];
-            
-            for (let i = 0; i < 4; i++) {
-                mountains.push(new Mountain(i * 250));
-            }
             
             for (let i = 0; i < 7; i++) {
                 backgroundElements.push(new SegaTree(i * 160));
@@ -529,16 +462,6 @@
         }
 
         function updateBackground() {
-            mountains.forEach((m, i) => {
-                m.speed = speed * 0.1;
-                m.update();
-                m.draw();
-                if (m.x + m.width < -100) {
-                    mountains.splice(i, 1);
-                    mountains.push(new Mountain());
-                }
-            });
-            
             backgroundElements.forEach((el, i) => {
                 el.speed = speed * (el instanceof SegaTree ? 0.3 : 0.15);
                 el.update();
@@ -632,19 +555,15 @@
         function drawGround() {
             ctx.fillStyle = COLORS.ground;
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
-            
             ctx.fillStyle = COLORS.groundLight;
             ctx.fillRect(0, canvas.height - groundHeight + 15, canvas.width, groundHeight - 15);
-            
             ctx.fillStyle = COLORS.grass;
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 14);
-            
             ctx.fillStyle = COLORS.grassLight;
             for (let i = 0; i < canvas.width; i += 25) {
                 const h = 6 + Math.sin(i + frame * 0.5) * 3;
                 ctx.fillRect(i, canvas.height - groundHeight - h, 12, h);
             }
-            
             ctx.fillStyle = '#603000';
             for (let i = 0; i < canvas.width; i += 40) {
                 ctx.fillRect(i + (frame % 40), canvas.height - groundHeight + 20, 20, 4);
